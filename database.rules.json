@@ -1,0 +1,28 @@
+{
+    "rules": {
+        "users": {
+            "$uid": {
+                ".read": "$uid === auth.uid || root.child('users').child(auth.uid).child('role').val() === 'admin'",
+                ".write": "$uid === auth.uid || root.child('users').child(auth.uid).child('role').val() === 'admin'"
+            }
+        },
+        "equipment": {
+            ".read": true,
+            ".write": "auth != null"
+        },
+        "bookings": {
+            ".read": "auth != null",
+            ".write": "auth != null"
+        },
+        "reviews": {
+            ".read": true,
+            ".write": "auth != null"
+        },
+        "notifications": {
+            "$uid": {
+                ".read": "$uid === auth.uid",
+                ".write": "auth != null"
+            }
+        }
+    }
+}
