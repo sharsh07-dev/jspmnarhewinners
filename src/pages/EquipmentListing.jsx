@@ -2,19 +2,20 @@ import React, { useEffect, useState, useMemo } from "react";
 import { Link } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { db } from "../firebase";
-import { ref, onValue } from "firebase/database";
+import { ref, onValue, push, set } from "firebase/database";
 import EquipmentCard, { EquipmentCardSkeleton } from "../components/EquipmentCard";
-import { getUserLocation, getDistanceKm } from "../utils/geo";
 import {
     MdSearch, MdFilterList, MdGridView, MdViewList,
     MdLocationOn, MdTune, MdClose, MdStar, MdVerified,
-    MdTrendingUp, MdAccessTime, MdShoppingCart, MdHandshake
+    MdTrendingUp, MdAccessTime, MdShoppingCart, MdHandshake,
+    MdAddCircle
 } from "react-icons/md";
 import { FaTractor, FaSeedling, FaSortAmountDown } from "react-icons/fa";
 import { compressAndUpload } from "../services/cloudinary";
 import { suggestPrice } from "../utils/priceSuggestion";
 import useAuthStore from "../store/useAuthStore";
-import { MdAddCircle } from "react-icons/md";
+import toast from "react-hot-toast";
+import { getUserLocation, getDistanceKm, reverseGeocode } from "../utils/geo";
 
 const EQUIPMENT_TYPE_LIST = ["Tractor", "Harvester", "Sprayer", "Rotavator", "Plough", "Tools"];
 

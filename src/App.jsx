@@ -19,6 +19,8 @@ import AdminPanel from "./pages/AdminPanel";
 import AuthPage from "./pages/AuthPage";
 import AIRecommendations from "./pages/AIRecommendations";
 import PesticideExchange from "./pages/PesticideExchange";
+import LiveMandiPrices from "./pages/LiveMandiPrices";
+import FarmerChatbot from "./components/FarmerChatbot";
 
 function App() {
   const { setAuthUser, setUser, setLoading, user, isLoading } = useAuthStore();
@@ -60,6 +62,7 @@ function App() {
     <Router>
       <div className="flex flex-col min-h-screen">
         <Navbar />
+        <FarmerChatbot />
         <main className="flex-grow">
           <Routes>
             <Route path="/" element={!user ? <HomePage /> : <Navigate to="/equipment" replace />} />
@@ -77,6 +80,10 @@ function App() {
             <Route
                path="/pesticide-exchange"
                element={user ? <PesticideExchange /> : <Navigate to="/auth" replace />}
+            />
+            <Route
+               path="/mandi-prices"
+               element={user ? <LiveMandiPrices /> : <Navigate to="/auth" replace />}
             />
             <Route
               path="/admin"

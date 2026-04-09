@@ -25,10 +25,10 @@ const MOCK_LISTINGS = [
         type: "buy",
         expiry: "2026-08-10",
         distance: "2.4 km",
-        ownerName: "Ramesh P.",
+        ownerName: "Ramesh Patil",
         rating: 4.8,
         aiSafe: true,
-        image: "https://images.unsplash.com/photo-1628186178306-037042a9bca5?auto=format&fit=crop&w=400&q=70"
+        image: "https://placehold.co/400x400/16a34a/FFF?font=montserrat&text=Organic+Pesticide"
     },
     {
         id: "p2",
@@ -39,10 +39,10 @@ const MOCK_LISTINGS = [
         type: "donate",
         expiry: "2026-05-15",
         distance: "4.1 km",
-        ownerName: "Suresh M.",
+        ownerName: "Sudhakar More",
         rating: 4.9,
         aiSafe: true,
-        image: "https://images.unsplash.com/photo-1592424090558-8134cd369aab?auto=format&fit=crop&w=400&q=70"
+        image: "https://placehold.co/400x400/eab308/111?font=montserrat&text=Urea+Fertilizer"
     },
     {
         id: "p3",
@@ -53,11 +53,11 @@ const MOCK_LISTINGS = [
         type: "buy",
         expiry: "2026-04-20", // Near expiry
         distance: "1.2 km",
-        ownerName: "Amit Kumar",
-        rating: 4.5,
+        ownerName: "Vishnu Jadhav",
+        rating: 5.0,
         aiSafe: false, // Flagged for toxicity/warning
         warning: "Use with caution. Harmful to soil microbes if overused.",
-        image: "https://images.unsplash.com/photo-1584725068212-32b5093eac7c?auto=format&fit=crop&w=400&q=70"
+        image: "https://placehold.co/400x400/dc2626/FFF?font=montserrat&text=Chemical+Spray"
     },
     {
         id: "p4",
@@ -68,10 +68,10 @@ const MOCK_LISTINGS = [
         type: "share",
         expiry: "2026-11-30",
         distance: "5.5 km",
-        ownerName: "Vijay S.",
+        ownerName: "Balasaheb Shinde",
         rating: 4.7,
         aiSafe: true,
-        image: "https://images.unsplash.com/photo-1625246333195-78d9c38ad449?auto=format&fit=crop&w=400&q=70"
+        image: "https://placehold.co/400x400/2563eb/FFF?font=montserrat&text=NPK+Mix"
     }
 ];
 
@@ -106,7 +106,7 @@ const AddPesticideModal = ({ open, onClose, authUser, user }) => {
         
         setUploading(true);
         try {
-            let imageUrl = "https://images.unsplash.com/photo-1628186178306-037042a9bca5?auto=format&fit=crop&w=400&q=70"; // default
+            let imageUrl = "https://placehold.co/400x400/9ca3af/FFF?font=montserrat&text=AgroChemical"; // default fallback
             if (imageFile) imageUrl = await compressAndUpload(imageFile);
             
             const newRef = push(ref(db, "pesticides"));

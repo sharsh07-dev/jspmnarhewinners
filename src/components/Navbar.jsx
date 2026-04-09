@@ -60,40 +60,49 @@ const Navbar = () => {
                     </Link>
 
                     {/* ── Desktop Right Side ── */}
-                    <div className="hidden md:flex items-center gap-1">
+                    <div className="hidden md:flex items-center gap-0.5 whitespace-nowrap">
                         {user ? (
                             /* ── LOGGED-IN: nav links on the right ── */
                             <>
                                 <Link
                                     to="/equipment"
-                                    className={`flex items-center gap-1.5 px-4 py-2 text-sm font-semibold transition-all duration-200 ${location.pathname === "/equipment" ? linkActive : linkInactive(!(scrolled || !isHome))
+                                    className={`flex items-center gap-1.5 px-2.5 py-2 text-sm font-semibold transition-all duration-200 ${location.pathname === "/equipment" ? linkActive : linkInactive(!(scrolled || !isHome))
                                         }`}
                                 >
                                     <MdSearch className="h-4 w-4" />
-                                    Find Equipment
+                                    Market
                                 </Link>
 
                                 <Link
                                     to="/ai-recommendations"
-                                    className={`flex items-center gap-1.5 px-4 py-2 text-sm font-semibold transition-all duration-200 ${location.pathname === "/ai-recommendations" ? linkActive : linkInactive(!(scrolled || !isHome))
+                                    className={`flex items-center gap-1.5 px-2.5 py-2 text-sm font-semibold transition-all duration-200 ${location.pathname === "/ai-recommendations" ? linkActive : linkInactive(!(scrolled || !isHome))
                                         }`}
                                 >
                                     <span className="text-xl">🧠</span>
-                                    AI Advisor
+                                    Advisor
                                 </Link>
 
                                 <Link
                                     to="/pesticide-exchange"
-                                    className={`flex items-center gap-1.5 px-4 py-2 text-sm font-semibold transition-all duration-200 ${location.pathname === "/pesticide-exchange" ? linkActive : linkInactive(!(scrolled || !isHome))
+                                    className={`flex items-center gap-1.5 px-2.5 py-2 text-sm font-semibold transition-all duration-200 ${location.pathname === "/pesticide-exchange" ? linkActive : linkInactive(!(scrolled || !isHome))
                                         }`}
                                 >
                                     <span className="text-xl">🌿</span>
-                                    Agro Exchange
+                                    Exchange
+                                </Link>
+
+                                <Link
+                                    to="/mandi-prices"
+                                    className={`flex items-center gap-1.5 px-2.5 py-2 text-sm font-semibold transition-all duration-200 ${location.pathname === "/mandi-prices" ? linkActive : linkInactive(!(scrolled || !isHome))
+                                        }`}
+                                >
+                                    <span className="text-xl">📊</span>
+                                    Mandi
                                 </Link>
 
                                 <Link
                                     to="/dashboard"
-                                    className={`flex items-center gap-1.5 px-4 py-2 text-sm font-semibold transition-all duration-200 ${location.pathname === "/dashboard" ? linkActive : linkInactive(!(scrolled || !isHome))
+                                    className={`flex items-center gap-1.5 px-2.5 py-2 text-sm font-semibold transition-all duration-200 ${location.pathname === "/dashboard" ? linkActive : linkInactive(!(scrolled || !isHome))
                                         }`}
                                 >
                                     <MdDashboard className="h-4 w-4" />
@@ -103,7 +112,7 @@ const Navbar = () => {
                                 {user.role === "admin" && (
                                     <Link
                                         to="/admin"
-                                        className={`px-4 py-2 text-sm font-semibold transition-all duration-200 ${location.pathname === "/admin"
+                                        className={`px-2.5 py-2 text-sm font-semibold transition-all duration-200 ${location.pathname === "/admin"
                                             ? "bg-red-500 text-white rounded-xl"
                                             : "text-red-500 hover:bg-red-50 rounded-xl"
                                             }`}
@@ -212,6 +221,9 @@ const Navbar = () => {
                                     </Link>
                                     <Link to="/pesticide-exchange" className="flex items-center gap-2 px-4 py-3 rounded-xl font-semibold text-sm text-gray-700 hover:bg-gray-50">
                                         <span className="text-xl">🌿</span> Agro Exchange
+                                    </Link>
+                                    <Link to="/mandi-prices" className="flex items-center gap-2 px-4 py-3 rounded-xl font-semibold text-sm text-gray-700 hover:bg-gray-50">
+                                        <span className="text-xl">📊</span> Mandi Prices
                                     </Link>
                                     <Link to="/dashboard" className="flex items-center gap-2 px-4 py-3 rounded-xl font-semibold text-sm text-gray-700 hover:bg-gray-50">
                                         <MdDashboard className="h-4 w-4" /> Dashboard
