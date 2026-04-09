@@ -6,7 +6,8 @@ import { auth } from "../firebase";
 import useAuthStore from "../store/useAuthStore";
 import { FaTractor } from "react-icons/fa";
 import { MdMenu, MdClose, MdLogout, MdDashboard, MdSearch } from "react-icons/md";
-import toast from "react-hot-toast";
+import { toast } from "react-hot-toast";
+import LanguageToggle from "./LanguageToggle";
 
 const Navbar = () => {
     const [open, setOpen] = useState(false);
@@ -70,6 +71,24 @@ const Navbar = () => {
                                 >
                                     <MdSearch className="h-4 w-4" />
                                     Find Equipment
+                                </Link>
+
+                                <Link
+                                    to="/ai-recommendations"
+                                    className={`flex items-center gap-1.5 px-4 py-2 text-sm font-semibold transition-all duration-200 ${location.pathname === "/ai-recommendations" ? linkActive : linkInactive(!(scrolled || !isHome))
+                                        }`}
+                                >
+                                    <span className="text-xl">🧠</span>
+                                    AI Advisor
+                                </Link>
+
+                                <Link
+                                    to="/pesticide-exchange"
+                                    className={`flex items-center gap-1.5 px-4 py-2 text-sm font-semibold transition-all duration-200 ${location.pathname === "/pesticide-exchange" ? linkActive : linkInactive(!(scrolled || !isHome))
+                                        }`}
+                                >
+                                    <span className="text-xl">🌿</span>
+                                    Agro Exchange
                                 </Link>
 
                                 <Link
@@ -150,14 +169,19 @@ const Navbar = () => {
                         )}
                     </div>
 
-                    {/* ── Mobile toggle ── */}
-                    <button
-                        onClick={() => setOpen(!open)}
-                        className={`md:hidden p-2 rounded-xl transition-colors ${scrolled || !isHome ? "text-gray-700 hover:bg-gray-100" : "text-white hover:bg-white/10"
-                            }`}
-                    >
-                        {open ? <MdClose className="h-6 w-6" /> : <MdMenu className="h-6 w-6" />}
-                    </button>
+                    <div className="flex items-center gap-2 md:gap-3 md:ml-1">
+                        {/* Custom Language Selector UI */}
+                        <LanguageToggle scrolled={scrolled} isHome={isHome} />
+
+                        {/* ── Mobile toggle ── */}
+                        <button
+                            onClick={() => setOpen(!open)}
+                            className={`md:hidden p-2 rounded-xl transition-colors ${scrolled || !isHome ? "text-gray-700 hover:bg-gray-100" : "text-white hover:bg-white/10"
+                                }`}
+                        >
+                            {open ? <MdClose className="h-6 w-6" /> : <MdMenu className="h-6 w-6" />}
+                        </button>
+                    </div>
                 </div>
             </div>
 
@@ -182,6 +206,12 @@ const Navbar = () => {
                                     </div>
                                     <Link to="/" className="flex items-center gap-2 px-4 py-3 rounded-xl font-semibold text-sm text-gray-700 hover:bg-green-50 hover:text-green-700">
                                         <MdSearch className="h-4 w-4" /> Find Equipment
+                                    </Link>
+                                    <Link to="/ai-recommendations" className="flex items-center gap-2 px-4 py-3 rounded-xl font-semibold text-sm text-gray-700 hover:bg-gray-50">
+                                        <span className="text-xl">🧠</span> AI Advisor
+                                    </Link>
+                                    <Link to="/pesticide-exchange" className="flex items-center gap-2 px-4 py-3 rounded-xl font-semibold text-sm text-gray-700 hover:bg-gray-50">
+                                        <span className="text-xl">🌿</span> Agro Exchange
                                     </Link>
                                     <Link to="/dashboard" className="flex items-center gap-2 px-4 py-3 rounded-xl font-semibold text-sm text-gray-700 hover:bg-gray-50">
                                         <MdDashboard className="h-4 w-4" /> Dashboard

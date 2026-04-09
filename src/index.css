@@ -1,8 +1,8 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Poppins:wght@400;600;700;800;900&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
-
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Poppins:wght@400;600;700;800;900&display=swap');
 
 @layer base {
   :root {
@@ -111,4 +111,31 @@
   background: linear-gradient(135deg, #16a34a, #15803d);
   z-index: 9999;
   pointer-events: none;
+}
+
+/* Google Translate Widget Overrides */
+.goog-te-banner-frame.skiptranslate,
+.skiptranslate iframe.goog-te-banner-frame,
+iframe.goog-te-banner-frame {
+    display: none !important;
+}
+html, body {
+    top: 0px !important;
+    position: static !important;
+}
+.VIpgJd-ZVi9od-ORHb-OEVmcd {
+    display: none !important;
+}
+.goog-logo-link {
+    display: none !important;
+}
+.goog-te-gadget {
+    color: transparent !important;
+    font-size: 0px !important;
+}
+.goog-te-gadget .goog-te-combo {
+    display: none !important;
+}
+#google_translate_element {
+    display: none !important;
 }

@@ -17,6 +17,8 @@ import EquipmentDetail from "./pages/EquipmentDetail";
 import Dashboard from "./pages/Dashboard";
 import AdminPanel from "./pages/AdminPanel";
 import AuthPage from "./pages/AuthPage";
+import AIRecommendations from "./pages/AIRecommendations";
+import PesticideExchange from "./pages/PesticideExchange";
 
 function App() {
   const { setAuthUser, setUser, setLoading, user, isLoading } = useAuthStore();
@@ -67,6 +69,14 @@ function App() {
             <Route
               path="/dashboard"
               element={user ? <Dashboard /> : <Navigate to="/auth" replace />}
+            />
+            <Route
+               path="/ai-recommendations"
+               element={user ? <AIRecommendations /> : <Navigate to="/auth" replace />}
+            />
+            <Route
+               path="/pesticide-exchange"
+               element={user ? <PesticideExchange /> : <Navigate to="/auth" replace />}
             />
             <Route
               path="/admin"

@@ -10,6 +10,8 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@babel/core": "^7.29.0",
+    "@babel/eslint-parser": "^7.28.6",
     "@cloudinary/react": "^1.14.4",
     "@cloudinary/url-gen": "^1.22.0",
     "@headlessui/react": "^2.2.9",

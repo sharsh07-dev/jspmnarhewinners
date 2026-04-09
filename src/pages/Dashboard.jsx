@@ -283,7 +283,7 @@ const Dashboard = () => {
                                                             <div>
                                                                 <p className="font-semibold text-sm text-gray-900">{b.equipmentName}</p>
                                                                 <p className="text-xs text-gray-500">
-                                                                    {b.startTime ? format(new Date(b.startTime), "MMM dd · HH:mm") : b.date} · {b.duration}h · ₹{b.totalPrice}
+                                                                    {b.startTime ? format(new Date(b.startTime), "MMM dd · HH:mm") : b.date} {b.duration ? `· ${b.duration}h ` : ""}· ₹{b.totalPrice}
                                                                 </p>
                                                             </div>
                                                             <div className="flex gap-2">
@@ -397,11 +397,11 @@ const Dashboard = () => {
                                                                     <p className="font-bold text-gray-900">{b.equipmentName}</p>
                                                                     <p className="text-sm text-gray-500 mt-0.5">
                                                                         {b.startTime
-                                                                            ? `${format(new Date(b.startTime), "MMM dd, yyyy • HH:mm")} – ${format(new Date(b.endTime), "HH:mm")}`
+                                                                            ? `${format(new Date(b.startTime), "MMM dd, yyyy • HH:mm")}${b.endTime ? ` – ${format(new Date(b.endTime), "HH:mm")}` : ""}`
                                                                             : b.date
                                                                         }
                                                                     </p>
-                                                                    <p className="text-sm text-gray-500">{b.duration}h · <span className="font-bold text-green-700">₹{b.totalPrice}</span></p>
+                                                                    <p className="text-sm text-gray-500">{b.duration ? `${b.duration}h · ` : ""}<span className="font-bold text-green-700">₹{b.totalPrice}</span></p>
                                                                     {b._category === "ongoing" && (
                                                                         <span className="inline-flex items-center gap-1 mt-1.5 text-xs font-bold text-green-700 bg-green-100 px-2 py-0.5 rounded-full">
                                                                             <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" /> Live Now
