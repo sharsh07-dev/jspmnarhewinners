@@ -474,7 +474,7 @@ const Dashboard = () => {
                                                                         <h3 className="font-bold text-gray-900 text-base">{b.equipmentName}</h3>
                                                                         <p className="text-sm text-gray-500 mt-0.5">
                                                                             {b.startTime
-                                                                                ? `${format(new Date(b.startTime), "MMM dd, yyyy • HH:mm")} – ${format(new Date(b.endTime), "HH:mm")}`
+                                                                                ? `${format(new Date(b.startTime), "MMM dd, yyyy • HH:mm")}${b.endTime ? ` – ${format(new Date(b.endTime), "HH:mm")}` : ""}`
                                                                                 : b.date
                                                                             } · {b.duration}h
                                                                         </p>
@@ -522,7 +522,7 @@ const Dashboard = () => {
                                                                                 className="flex items-center gap-1 px-3 py-1.5 bg-blue-600 text-white text-xs font-bold rounded-lg hover:bg-blue-700 transition">
                                                                                 <MdPhone className="h-3.5 w-3.5" /> Call
                                                                             </a>
-                                                                            <a href={`https://wa.me/91${b.userPhone?.replace(/[^0-9]/g, '')}`}
+                                                                            <a href={`https://wa.me/91${String(b.userPhone || "").replace(/[^0-9]/g, '')}`}
                                                                                 target="_blank" rel="noreferrer"
                                                                                 className="flex items-center gap-1 px-3 py-1.5 bg-green-500 text-white text-xs font-bold rounded-lg hover:bg-green-600 transition">
                                                                                 <MdMessage className="h-3.5 w-3.5" /> WhatsApp
