@@ -15,7 +15,10 @@ import HomePage from "./pages/HomePage";
 import EquipmentListing from "./pages/EquipmentListing";
 import EquipmentDetail from "./pages/EquipmentDetail";
 import Dashboard from "./pages/Dashboard";
-import AdminPanel from "./pages/AdminPanel";
+import AdminDashboard from "./pages/AdminDashboard"; // Replaces AdminPanel for specific dashboard
+import MukadamDashboard from "./pages/MukadamDashboard";
+import LabourDashboard from "./pages/LabourDashboard";
+import AuditDashboard from "./pages/AuditDashboard";
 import AuthPage from "./pages/AuthPage";
 import AIRecommendations from "./pages/AIRecommendations";
 import PesticideExchange from "./pages/PesticideExchange";
@@ -62,32 +65,44 @@ function App() {
     <Router>
       <div className="flex flex-col min-h-screen">
         <Navbar />
-        <FarmerChatbot />
+        {(!user || user?.role === "farmer") && <FarmerChatbot />}
         <main className="flex-grow">
           <Routes>
-            <Route path="/" element={!user ? <HomePage /> : <Navigate to="/equipment" replace />} />
-            <Route path="/equipment" element={<EquipmentListing />} />
-            <Route path="/equipment/:id" element={<EquipmentDetail />} />
-            <Route path="/auth" element={!user ? <AuthPage /> : <Navigate to="/equipment" replace />} />
+            <Route path="/" element={!user ? <HomePage /> : (user.role === 'farmer' ? <Navigate to="/equipment" replace /> : <Navigate to={`/${user.role}`} replace />)} />
+            <Route path="/equipment" element={(!user || user?.role === "farmer") ? <EquipmentListing /> : <Navigate to="/" replace />} />
+            <Route path="/equipment/:id" element={(!user || user?.role === "farmer") ? <EquipmentDetail /> : <Navigate to="/" replace />} />
+            <Route path="/auth" element={!user ? <AuthPage /> : <Navigate to={user.role === 'farmer' ? '/equipment' : `/${user.role === 'admin' ? 'admin' : user.role}`} replace />} />
             <Route
               path="/dashboard"
-              element={user ? <Dashboard /> : <Navigate to="/auth" replace />}
+              element={user?.role === "farmer" ? <Dashboard /> : <Navigate to="/" replace />}
             />
             <Route
                path="/ai-recommendations"
-               element={user ? <AIRecommendations /> : <Navigate to="/auth" replace />}
+               element={user?.role === "farmer" ? <AIRecommendations /> : <Navigate to="/" replace />}
             />
             <Route
                path="/pesticide-exchange"
-               element={user ? <PesticideExchange /> : <Navigate to="/auth" replace />}
+               element={user?.role === "farmer" ? <PesticideExchange /> : <Navigate to="/" replace />}
             />
             <Route
                path="/mandi-prices"
-               element={user ? <LiveMandiPrices /> : <Navigate to="/auth" replace />}
+               element={user?.role === "farmer" ? <LiveMandiPrices /> : <Navigate to="/" replace />}
             />
             <Route
-              path="/admin"
-              element={user?.role === "admin" ? <AdminPanel /> : <Navigate to="/" replace />}
+               path="/admin"
+               element={user?.role === "admin" ? <AdminDashboard /> : <Navigate to="/" replace />}
+            />
+            <Route
+               path="/mukadam"
+               element={user?.role === "mukadam" ? <MukadamDashboard /> : <Navigate to="/" replace />}
+            />
+            <Route
+               path="/labour"
+               element={user?.role === "labour" ? <LabourDashboard /> : <Navigate to="/" replace />}
+            />
+            <Route
+               path="/audit"
+               element={user?.role === "audit" ? <AuditDashboard /> : <Navigate to="/" replace />}
             />
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>

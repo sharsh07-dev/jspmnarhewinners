@@ -1,0 +1,59 @@
+import React from "react";
+import { motion } from "framer-motion";
+import useAuthStore from "../store/useAuthStore";
+import { Navigate } from "react-router-dom";
+import { MdAccountBalance, MdAnalytics, MdDescription } from "react-icons/md";
+
+const AuditDashboard = () => {
+    const { user } = useAuthStore();
+
+    if (user?.role !== "audit") return <Navigate to="/" replace />;
+
+    return (
+        <div className="min-h-screen bg-gray-50 pt-20 pb-10 px-4 sm:px-6 lg:px-8">
+            <div className="max-w-7xl mx-auto space-y-8">
+                <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="bg-white rounded-3xl p-8 shadow-sm border border-gray-100 flex flex-col sm:flex-row items-start sm:items-center justify-between"
+                >
+                    <div>
+                        <h1 className="text-3xl font-black text-gray-900 font-display">Bank Audit System</h1>
+                        <p className="text-gray-500 mt-2">Monitor financial anomalies, loan tracking, and farm revenue reports for auditing purposes.</p>
+                    </div>
+                    <div className="mt-4 sm:mt-0 flex items-center gap-3">
+                        <div className="w-12 h-12 bg-indigo-100 text-indigo-600 rounded-full flex items-center justify-center">
+                            <MdAccountBalance className="h-6 w-6" />
+                        </div>
+                    </div>
+                </motion.div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <div className="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm flex flex-col gap-4">
+                        <div className="w-12 h-12 bg-indigo-100 text-indigo-600 rounded-2xl flex items-center justify-center">
+                            <MdAnalytics className="h-6 w-6" />
+                        </div>
+                        <div>
+                            <h3 className="text-lg font-bold">Transaction Logs</h3>
+                            <p className="text-sm text-gray-500 mt-1">Review aggregated platform transactions.</p>
+                        </div>
+                        <button className="mt-auto bg-indigo-50 text-indigo-600 py-2 rounded-xl font-semibold hover:bg-indigo-100 transition">View Logs</button>
+                    </div>
+
+                    <div className="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm flex flex-col gap-4">
+                        <div className="w-12 h-12 bg-teal-100 text-teal-600 rounded-2xl flex items-center justify-center">
+                            <MdDescription className="h-6 w-6" />
+                        </div>
+                        <div>
+                            <h3 className="text-lg font-bold">Generate Reports</h3>
+                            <p className="text-sm text-gray-500 mt-1">Download official audit compliance reports.</p>
+                        </div>
+                        <button className="mt-auto bg-teal-50 text-teal-600 py-2 rounded-xl font-semibold hover:bg-teal-100 transition">Export PDF</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    );
+};
+
+export default AuditDashboard;
