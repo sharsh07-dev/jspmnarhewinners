@@ -16,6 +16,7 @@ import {
     MdVerified, MdFlashOn, MdSecurity, MdClose
 } from "react-icons/md";
 import { FaTractor, FaSeedling } from "react-icons/fa";
+import tractorsImg from "../assets/TRACTORS.jpg";
 
 /* ─── Static data ─────────────────────────────────── */
 const STATS = [
@@ -276,7 +277,7 @@ const HomePage = () => {
             <section className="relative min-h-screen flex items-center justify-center overflow-hidden">
                 {/* Background Image */}
                 <img
-                    src="/src/assets/TRACTORS.jpg"
+                    src={tractorsImg}
                     alt="Farm tractors"
                     className="absolute inset-0 w-full h-full object-cover object-center scale-105"
                 />
