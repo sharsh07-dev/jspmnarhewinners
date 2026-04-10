@@ -5,7 +5,7 @@ import { signOut } from "firebase/auth";
 import { auth } from "../firebase";
 import useAuthStore from "../store/useAuthStore";
 import { FaTractor } from "react-icons/fa";
-import { MdMenu, MdClose, MdLogout, MdDashboard, MdSearch } from "react-icons/md";
+import { MdMenu, MdClose, MdLogout, MdDashboard, MdSearch, MdAccountBalance } from "react-icons/md";
 import { toast } from "react-hot-toast";
 import LanguageToggle from "./LanguageToggle";
 
@@ -73,54 +73,14 @@ const Navbar = () => {
                         {user ? (
                             /* ── LOGGED-IN: nav links on the right ── */
                             <>
-                                {user.role === "farmer" && (
-                                    <>
-                                        <Link
-                                            to="/equipment"
-                                            className={`flex items-center gap-1.5 px-2.5 py-2 text-sm font-semibold transition-all duration-200 ${location.pathname === "/equipment" ? linkActive : linkInactive(!(scrolled || !isHome))
-                                                }`}
-                                        >
-                                            <MdSearch className="h-4 w-4" />
-                                            Market
-                                        </Link>
-
-                                        <Link
-                                            to="/ai-recommendations"
-                                            className={`flex items-center gap-1.5 px-2.5 py-2 text-sm font-semibold transition-all duration-200 ${location.pathname === "/ai-recommendations" ? linkActive : linkInactive(!(scrolled || !isHome))
-                                                }`}
-                                        >
-                                            <span className="text-xl">🧠</span>
-                                            Advisor
-                                        </Link>
-
-                                        <Link
-                                            to="/pesticide-exchange"
-                                            className={`flex items-center gap-1.5 px-2.5 py-2 text-sm font-semibold transition-all duration-200 ${location.pathname === "/pesticide-exchange" ? linkActive : linkInactive(!(scrolled || !isHome))
-                                                }`}
-                                        >
-                                            <span className="text-xl">🌿</span>
-                                            Exchange
-                                        </Link>
-
-                                        <Link
-                                            to="/mandi-prices"
-                                            className={`flex items-center gap-1.5 px-2.5 py-2 text-sm font-semibold transition-all duration-200 ${location.pathname === "/mandi-prices" ? linkActive : linkInactive(!(scrolled || !isHome))
-                                                }`}
-                                        >
-                                            <span className="text-xl">📊</span>
-                                            Mandi
-                                        </Link>
-                                    </>
-                                )}
-
                                 <Link
-                                    to={getDashboardLink()}
-                                    className={`flex items-center gap-1.5 px-2.5 py-2 text-sm font-semibold transition-all duration-200 ${location.pathname === getDashboardLink() ? linkActive : linkInactive(!(scrolled || !isHome))
-                                        }`}
-                                >
-                                    <MdDashboard className="h-4 w-4" />
-                                    Dashboard
-                                </Link>
+                                     to={getDashboardLink()}
+                                     className={`flex items-center gap-1.5 px-2.5 py-2 text-sm font-semibold transition-all duration-200 ${location.pathname === getDashboardLink() ? linkActive : linkInactive(!(scrolled || !isHome))
+                                         }`}
+                                 >
+                                     <MdDashboard className="h-4 w-4" />
+                                     Main
+                                 </Link>
 
                                 {/* Divider */}
                                 <div className="w-px h-6 bg-gray-200 mx-2" />
@@ -216,8 +176,11 @@ const Navbar = () => {
                                     </div>
                                     {user.role === "farmer" && (
                                         <>
-                                            <Link to="/" className="flex items-center gap-2 px-4 py-3 rounded-xl font-semibold text-sm text-gray-700 hover:bg-green-50 hover:text-green-700">
-                                                <MdSearch className="h-4 w-4" /> Find Equipment
+                                            <Link to="/equipment" className="flex items-center gap-2 px-4 py-3 rounded-xl font-semibold text-sm text-gray-700 hover:bg-green-50 hover:text-green-700">
+                                                <MdSearch className="h-4 w-4" /> Equipment Market
+                                            </Link>
+                                            <Link to="/schemes" className="flex items-center gap-2 px-4 py-3 rounded-xl font-semibold text-sm text-gray-700 hover:bg-green-50 hover:text-green-700">
+                                                <MdAccountBalance className="h-4 w-4" /> Govt Schemes
                                             </Link>
                                             <Link to="/ai-recommendations" className="flex items-center gap-2 px-4 py-3 rounded-xl font-semibold text-sm text-gray-700 hover:bg-gray-50">
                                                 <span className="text-xl">🧠</span> AI Advisor

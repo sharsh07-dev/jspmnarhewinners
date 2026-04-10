@@ -9,6 +9,7 @@ import { auth, db } from "./firebase";
 import useAuthStore from "./store/useAuthStore";
 
 import Navbar from "./components/Navbar";
+import Sidebar from "./components/Sidebar";
 import Footer from "./components/Footer";
 
 import HomePage from "./pages/HomePage";
@@ -23,6 +24,7 @@ import AuthPage from "./pages/AuthPage";
 import AIRecommendations from "./pages/AIRecommendations";
 import PesticideExchange from "./pages/PesticideExchange";
 import LiveMandiPrices from "./pages/LiveMandiPrices";
+import SchemeDiscovery from "./pages/SchemeDiscovery";
 import FarmerChatbot from "./components/FarmerChatbot";
 
 function App() {
@@ -63,51 +65,32 @@ function App() {
 
   return (
     <Router>
-      <div className="flex flex-col min-h-screen">
+      <div className="flex flex-col min-h-screen font-display">
         <Navbar />
+        <Sidebar />
         {(!user || user?.role === "farmer") && <FarmerChatbot />}
-        <main className="flex-grow">
+        
+        <main className={`flex-grow transition-all duration-300 ${user ? "lg:pl-64 pt-[68px]" : ""}`}>
           <Routes>
             <Route path="/" element={!user ? <HomePage /> : (user.role === 'farmer' ? <Navigate to="/equipment" replace /> : <Navigate to={`/${user.role}`} replace />)} />
             <Route path="/equipment" element={(!user || user?.role === "farmer") ? <EquipmentListing /> : <Navigate to="/" replace />} />
             <Route path="/equipment/:id" element={(!user || user?.role === "farmer") ? <EquipmentDetail /> : <Navigate to="/" replace />} />
             <Route path="/auth" element={!user ? <AuthPage /> : <Navigate to={user.role === 'farmer' ? '/equipment' : `/${user.role === 'admin' ? 'admin' : user.role}`} replace />} />
-            <Route
-              path="/dashboard"
-              element={user?.role === "farmer" ? <Dashboard /> : <Navigate to="/" replace />}
-            />
-            <Route
-               path="/ai-recommendations"
-               element={user?.role === "farmer" ? <AIRecommendations /> : <Navigate to="/" replace />}
-            />
-            <Route
-               path="/pesticide-exchange"
-               element={user?.role === "farmer" ? <PesticideExchange /> : <Navigate to="/" replace />}
-            />
-            <Route
-               path="/mandi-prices"
-               element={user?.role === "farmer" ? <LiveMandiPrices /> : <Navigate to="/" replace />}
-            />
-            <Route
-               path="/admin"
-               element={user?.role === "admin" ? <AdminDashboard /> : <Navigate to="/" replace />}
-            />
-            <Route
-               path="/mukadam"
-               element={user?.role === "mukadam" ? <MukadamDashboard /> : <Navigate to="/" replace />}
-            />
-            <Route
-               path="/labour"
-               element={user?.role === "labour" ? <LabourDashboard /> : <Navigate to="/" replace />}
-            />
-            <Route
-               path="/audit"
-               element={user?.role === "audit" ? <AuditDashboard /> : <Navigate to="/" replace />}
-            />
+            <Route path="/dashboard" element={user?.role === "farmer" ? <Dashboard /> : <Navigate to="/" replace />} />
+            <Route path="/ai-recommendations" element={user?.role === "farmer" ? <AIRecommendations /> : <Navigate to="/" replace />} />
+            <Route path="/pesticide-exchange" element={user?.role === "farmer" ? <PesticideExchange /> : <Navigate to="/" replace />} />
+            <Route path="/mandi-prices" element={user?.role === "farmer" ? <LiveMandiPrices /> : <Navigate to="/" replace />} />
+            <Route path="/schemes" element={user?.role === "farmer" ? <SchemeDiscovery /> : <Navigate to="/" replace />} />
+            <Route path="/admin" element={user?.role === "admin" ? <AdminDashboard /> : <Navigate to="/" replace />} />
+            <Route path="/mukadam" element={user?.role === "mukadam" ? <MukadamDashboard /> : <Navigate to="/" replace />} />
+            <Route path="/labour" element={user?.role === "labour" ? <LabourDashboard /> : <Navigate to="/" replace />} />
+            <Route path="/audit" element={user?.role === "audit" ? <AuditDashboard /> : <Navigate to="/" replace />} />
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
         </main>
-        <Footer />
+
+        {!user && <Footer />}
+
         <Toaster
           position="bottom-center"
           toastOptions={{
