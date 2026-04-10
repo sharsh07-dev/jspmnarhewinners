@@ -63,7 +63,7 @@ const Navbar = () => {
                         <div className="w-9 h-9 bg-green-600 rounded-xl flex items-center justify-center shadow-md group-hover:scale-110 transition-transform">
                             <FaTractor className="text-white h-5 w-5" />
                         </div>
-                        <span className={`text-xl font-black font-display tracking-tight transition-colors ${textColor}`}>
+                        <span className={`text-xl font-bold font-display tracking-tight transition-colors ${textColor}`}>
                             Agro<span className="text-green-400">Share</span>
                         </span>
                     </Link>
@@ -177,7 +177,7 @@ const Navbar = () => {
                                     {user.role === "farmer" && (
                                         <>
                                             <Link to="/equipment" className="flex items-center gap-2 px-4 py-3 rounded-xl font-semibold text-sm text-gray-700 hover:bg-green-50 hover:text-green-700">
-                                                <MdSearch className="h-4 w-4" /> Equipment Market
+                                                <MdSearch className="h-4 w-4" /> Find Equipment
                                             </Link>
                                             <Link to="/schemes" className="flex items-center gap-2 px-4 py-3 rounded-xl font-semibold text-sm text-gray-700 hover:bg-green-50 hover:text-green-700">
                                                 <MdAccountBalance className="h-4 w-4" /> Govt Schemes

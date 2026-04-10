@@ -259,7 +259,7 @@ const Dashboard = () => {
                                 {/* ─ OVERVIEW ─ */}
                                 {tab === "overview" && (
                                     <div className="space-y-6">
-                                        <h2 className="text-2xl font-black text-gray-900 font-display">
+                                        <h2 className="text-xl md:text-2xl font-bold text-gray-900 font-display">
                                             Welcome back, {user?.name?.split(" ")[0]}! 👋
                                         </h2>
 
@@ -271,9 +271,9 @@ const Dashboard = () => {
                                                 { label: "My Listings", value: myEquipment.length, color: "bg-purple-50 text-purple-700" },
                                                 { label: "Earnings", value: `₹${totalEarnings}`, color: "bg-green-50 text-green-700" },
                                             ].map((s, i) => (
-                                                <motion.div key={i} whileHover={{ y: -4 }} className={`rounded-2xl p-5 ${s.color}`}>
-                                                    <p className="text-2xl font-black">{s.value}</p>
-                                                    <p className="text-xs font-semibold mt-1 opacity-70">{s.label}</p>
+                                                <motion.div key={i} whileHover={{ y: -4 }} className={`rounded-2xl p-4 md:p-5 ${s.color} border border-black/5`}>
+                                                    <p className="text-xl md:text-2xl font-bold">{s.value}</p>
+                                                    <p className="text-[10px] md:text-xs font-bold uppercase tracking-tight opacity-70 mt-1">{s.label}</p>
                                                 </motion.div>
                                             ))}
                                         </div>
@@ -661,8 +661,8 @@ const Dashboard = () => {
                                                             <p className="font-bold text-gray-900 truncate">{eq.name}</p>
                                                             <p className="text-sm text-gray-500">{eq.type}</p>
                                                             <div className="flex gap-3 mt-1">
-                                                                {eq.price > 0 && <p className="font-black text-green-700 text-sm">₹{eq.price}/hr</p>}
-                                                                {eq.salePrice && <p className="font-black text-orange-600 text-sm">₹{eq.salePrice} sell</p>}
+                                                                {eq.price > 0 && <p className="font-bold text-green-700 text-sm">₹{eq.price}/hr</p>}
+                                                                {eq.salePrice && <p className="font-bold text-orange-600 text-sm">₹{eq.salePrice} sell</p>}
                                                             </div>
                                                             <p className="text-xs text-gray-400 mt-1">
                                                                 {ownerBookings.filter(b => b.equipmentId === eq.id).length} booking(s)

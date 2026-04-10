@@ -1,34 +1,36 @@
 import React, { useEffect, useState } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { db } from "../firebase";
-import { ref, get, onValue, push, set, runTransaction } from "firebase/database";
+import { ref, get, onValue, push, set } from "firebase/database";
 import { motion, AnimatePresence } from "framer-motion";
 import useAuthStore from "../store/useAuthStore";
-import useUIStore from "../store/useUIStore";
-import { format, addHours, parseISO } from "date-fns";
+import { format, addHours } from "date-fns";
 import toast from "react-hot-toast";
+import { generateGSTInvoice } from "../utils/invoiceGenerator";
 import {
     MdLocationOn, MdStar, MdAccessTime, MdCalendarToday,
-    MdVerified, MdPerson, MdShare, MdFavorite
+    MdVerified, MdShare, MdFavorite, MdHourglassEmpty, MdPrint, MdClose
 } from "react-icons/md";
 
 const EquipmentDetail = () => {
     const { id } = useParams();
     const navigate = useNavigate();
     const { user, authUser } = useAuthStore();
-    const { addNotification } = useUIStore();
+    const location = useLocation();
+    const wizardData = location.state?.dates;
 
     const [equipment, setEquipment] = useState(null);
     const [owner, setOwner] = useState(null);
     const [reviews, setReviews] = useState([]);
     const [loading, setLoading] = useState(true);
 
-    // Booking form state
+    // Booking states
     const [bookDate, setBookDate] = useState("");
     const [startTime, setStartTime] = useState("");
     const [duration, setDuration] = useState(2);
     const [bookLoading, setBookLoading] = useState(false);
-    const [bookSuccess, setBookSuccess] = useState(false);
+    const [bookingId, setBookingId] = useState(null);
+    const [step, setStep] = useState(0); // 0: Form, 2: Success Receipt
 
     // Review form
     const [rating, setRating] = useState(5);
@@ -40,10 +42,8 @@ const EquipmentDetail = () => {
             if (!snap.exists()) { toast.error("Equipment not found"); navigate("/equipment"); return; }
             const eq = snap.val();
             setEquipment(eq);
-            // Fetch owner
             get(ref(db, `users/${eq.ownerId}`)).then((s) => s.exists() && setOwner(s.val()));
         });
-        // Reviews
         const revRef = ref(db, `reviews/${id}`);
         const unsub = onValue(revRef, (snap) => {
             if (snap.exists()) {
@@ -54,88 +54,114 @@ const EquipmentDetail = () => {
         return () => unsub();
     }, [id, navigate]);
 
-    const totalPrice = equipment ? equipment.price * duration : 0;
+    useEffect(() => {
+        if (wizardData) {
+            setBookDate(wizardData.start);
+            setStartTime(wizardData.startTime);
+            try {
+                const s = new Date(`${wizardData.start}T${wizardData.startTime}`);
+                const e = new Date(`${wizardData.end}T${wizardData.endTime}`);
+                const diffHours = (e - s) / (1000 * 60 * 60);
+                if (diffHours > 0) setDuration(Math.max(1, Math.round(diffHours)));
+            } catch (err) { console.error("Duration calc failed", err); }
+        }
+    }, [wizardData]);
+
+    const totalPrice = equipment ? (equipment.listingType === "sell" ? equipment.salePrice : equipment.price * duration) : 0;
 
     const handleBooking = async (e) => {
         e.preventDefault();
         if (!authUser) { toast.error("Please login to book"); navigate("/auth"); return; }
-        if (!bookDate || !startTime) { toast.error("Fill all booking fields"); return; }
+        
+        if (equipment.listingType !== "sell") {
+            if (!bookDate || !startTime) { toast.error("Fill all booking fields"); return; }
+        }
 
-        // ── Owner cannot book their own equipment ──
         if (equipment && authUser.uid === equipment.ownerId) {
             toast.error("You cannot book your own equipment.");
             return;
         }
 
-        const startISO = new Date(`${bookDate}T${startTime}`).toISOString();
-        const endISO = addHours(new Date(`${bookDate}T${startTime}`), duration).toISOString();
-
         setBookLoading(true);
         try {
-            // Check existing bookings for overlap
-            const bookSnap = await get(ref(db, "bookings"));
-            if (bookSnap.exists()) {
-                const allBookings = Object.values(bookSnap.val()).filter(
-                    (b) => b.equipmentId === id && b.status !== "cancelled"
-                );
-                const hasOverlap = allBookings.some((b) => {
-                    const bStart = new Date(b.startTime).getTime();
-                    const bEnd = new Date(b.endTime).getTime();
-                    const rStart = new Date(startISO).getTime();
-                    const rEnd = new Date(endISO).getTime();
-                    return rStart < bEnd && bStart < rEnd;
-                });
-                if (hasOverlap) {
-                    toast.error("⚠️ This slot is already booked. Please choose a different time.");
-                    setBookLoading(false);
-                    return;
+            let startISO = new Date().toISOString();
+            let endISO = new Date().toISOString();
+
+            if (equipment.listingType !== "sell") {
+                startISO = new Date(`${bookDate}T${startTime}`).toISOString();
+                endISO = addHours(new Date(`${bookDate}T${startTime}`), duration).toISOString();
+
+                const bookSnap = await get(ref(db, "bookings"));
+                if (bookSnap.exists()) {
+                    const allBookings = Object.values(bookSnap.val()).filter(
+                        (b) => b.equipmentId === id && b.status !== "cancelled"
+                    );
+                    const hasOverlap = allBookings.some((b) => {
+                        const bStart = new Date(b.startTime).getTime();
+                        const bEnd = new Date(b.endTime).getTime();
+                        const rStart = new Date(startISO).getTime();
+                        const rEnd = new Date(endISO).getTime();
+                        return rStart < bEnd && bStart < rEnd;
+                    });
+                    if (hasOverlap) {
+                        toast.error("⚠️ Overlap detected. Choose another time.");
+                        setBookLoading(false);
+                        return;
+                    }
                 }
             }
 
             const newRef = push(ref(db, "bookings"));
-            const bookingId = newRef.key;
+            const bId = newRef.key;
+            setBookingId(bId.toUpperCase());
+
             await set(newRef, {
                 userId: authUser.uid,
                 userName: user?.name || "Farmer",
-                userPhone: user?.phone || "",
-                userAddress: user?.village || "",
                 equipmentId: id,
                 equipmentName: equipment.name,
                 ownerId: equipment.ownerId,
+                ownerName: owner?.name || "Equipment Owner",
                 startTime: startISO,
                 endTime: endISO,
-                duration,
+                duration: equipment.listingType === "sell" ? "One-time" : duration,
                 totalPrice,
                 status: "pending",
-                paymentStatus: "unpaid",
+                paymentStatus: "paid",
+                listingType: equipment.listingType || "rent",
                 createdAt: new Date().toISOString(),
             });
 
-            // ── Notify booker ──
-            await push(ref(db, `notifications/${authUser.uid}`), {
-                type: "booking_placed",
-                message: `Booking request sent for "${equipment.name}" on ${bookDate} at ${startTime}. Waiting for owner confirmation. 🕐`,
+            await push(ref(db, `notifications/${equipment.ownerId}`), {
+                type: "new_booking_request",
+                message: `New request for "${equipment.name}" from ${user?.name}. ₹${totalPrice}.`,
                 createdAt: new Date().toISOString(),
                 read: false,
             });
 
-            // ── Notify equipment owner ──
-            if (equipment.ownerId) {
-                await push(ref(db, `notifications/${equipment.ownerId}`), {
-                    type: "new_booking_request",
-                    message: `New booking request for "${equipment.name}" on ${bookDate} at ${startTime}. ₹${totalPrice}. Please confirm in your Dashboard.`,
-                    createdAt: new Date().toISOString(),
-                    read: false,
-                });
-            }
-
-            setBookSuccess(true);
+            setTimeout(() => {
+                setBookLoading(false);
+                setStep(2);
+            }, 1000);
         } catch (err) {
-            console.error(err);
-            toast.error("Booking failed. Try again.");
-        } finally {
+            toast.error("Booking failed");
             setBookLoading(false);
         }
+    };
+
+    const handlePrint = () => {
+        toast.success("Generating GST Invoice...");
+        generateGSTInvoice(
+            { 
+                id: bookingId, 
+                price: totalPrice, 
+                equipmentName: equipment.name, 
+                duration: equipment.listingType === "sell" ? "1 Unit" : `${duration} Hours`,
+                createdAt: new Date().toISOString() 
+            },
+            { name: owner?.name || "AgroShare Vendor", address: owner?.village || "Farmer Hub", state: "Maharashtra" },
+            { name: user?.name || "Farmer", address: user?.village || "Local", state: "Maharashtra" }
+        );
     };
 
     const handleReview = async (e) => {
@@ -165,9 +191,9 @@ const EquipmentDetail = () => {
 
     return (
         <div className="min-h-screen bg-gray-50 pt-20">
-            {/* Booking success overlay */}
+            {/* Success Modal - matching previous design */}
             <AnimatePresence>
-                {bookSuccess && (
+                {step === 2 && (
                     <motion.div
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
@@ -177,28 +203,33 @@ const EquipmentDetail = () => {
                         <motion.div
                             initial={{ scale: 0.5, opacity: 0 }}
                             animate={{ scale: 1, opacity: 1 }}
-                            transition={{ type: "spring", stiffness: 260, damping: 20 }}
-                            className="bg-white rounded-3xl p-10 text-center max-w-sm w-full shadow-2xl"
+                            className="bg-white rounded-3xl p-10 text-center max-w-sm w-full shadow-2xl relative"
                         >
-                            <motion.div
-                                animate={{ rotate: [0, -10, 10, 0], scale: [1, 1.3, 1] }}
-                                transition={{ duration: 0.6 }}
-                                className="text-7xl mb-4"
-                            >🎉</motion.div>
-                            <h3 className="text-2xl font-black text-gray-900 mb-2">Booking Placed!</h3>
-                            <p className="text-gray-500 mb-6">
-                                Your booking for <strong>{equipment.name}</strong> is <span className="text-green-600 font-bold">pending confirmation</span>.
+                            <div className="text-6xl mb-4 animate-bounce">🎉</div>
+                            <h3 className="text-2xl font-bold text-gray-900 mb-2">Booking Placed!</h3>
+                            <p className="text-gray-500 mb-6 font-medium">
+                                Your request for <strong>{equipment.name}</strong> is confirmed.
                             </p>
-                            <div className="bg-green-50 rounded-2xl p-4 mb-6 text-left">
-                                <p className="text-sm text-gray-600">Date: <strong>{bookDate}</strong></p>
-                                <p className="text-sm text-gray-600">Time: <strong>{startTime}</strong> · {duration}h</p>
-                                <p className="text-sm text-gray-600">Total: <strong className="text-green-700">₹{totalPrice}</strong></p>
+                            
+                            <div className="bg-green-50 rounded-2xl p-5 mb-6 text-left border border-green-100">
+                                <p className="text-sm font-bold text-gray-800 mb-2 flex justify-between uppercase tracking-wider text-[10px]">Order Details</p>
+                                <div className="space-y-1">
+                                    <p className="text-xs text-gray-600">ID: <span className="font-bold text-gray-800">#{bookingId}</span></p>
+                                    <p className="text-xs text-gray-600 text-right font-bold text-green-700">PAID</p>
+                                </div>
                             </div>
-                            <button
-                                onClick={() => navigate("/dashboard")}
-                                className="btn-primary w-full"
-                            >
-                                View in Dashboard →
+
+                            <div className="flex gap-2">
+                                <button onClick={handlePrint} className="flex-1 py-3 bg-gray-100 text-gray-700 font-bold rounded-xl flex items-center justify-center gap-2 hover:bg-gray-200 transition">
+                                    <MdPrint /> Receipt
+                                </button>
+                                <button onClick={() => navigate("/dashboard")} className="flex-1 btn-primary py-3 rounded-xl font-bold">
+                                    Dashboard
+                                </button>
+                            </div>
+                            
+                            <button onClick={() => setStep(0)} className="absolute top-4 right-4 text-gray-400 hover:text-gray-600">
+                                <MdClose className="text-xl" />
                             </button>
                         </motion.div>
                     </motion.div>
@@ -207,9 +238,8 @@ const EquipmentDetail = () => {
 
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                    {/* ─── Left: Details ─── */}
+                    {/* Left Details */}
                     <div className="lg:col-span-2 space-y-6">
-                        {/* Hero image */}
                         <div className="relative rounded-3xl overflow-hidden shadow-xl h-72 md:h-96 bg-gray-200">
                             <img
                                 src={equipment.imageUrl || "https://images.unsplash.com/photo-1592982537447-6f23dbdc7e90?auto=format&fit=crop&w=1200&q=80"}
@@ -220,7 +250,7 @@ const EquipmentDetail = () => {
                             <div className="absolute bottom-6 left-6 right-6 flex justify-between items-end">
                                 <div>
                                     <span className="badge badge-green mb-2">{equipment.type}</span>
-                                    <h1 className="text-3xl md:text-4xl font-black text-white font-display">{equipment.name}</h1>
+                                    <h1 className="text-3xl md:text-4xl font-bold text-white font-display uppercase">{equipment.name}</h1>
                                 </div>
                                 <div className="flex gap-2">
                                     <button className="w-10 h-10 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center text-white hover:bg-white/30 transition">
@@ -233,12 +263,11 @@ const EquipmentDetail = () => {
                             </div>
                         </div>
 
-                        {/* Info row */}
                         <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
                             <div className="flex flex-wrap gap-4 items-center justify-between mb-4">
                                 <div className="flex items-center gap-2 text-gray-600">
                                     <MdLocationOn className="h-5 w-5 text-green-500" />
-                                    <span>{equipment.location?.address || equipment.location || "Location not set"}</span>
+                                    <span className="font-bold">{equipment.location?.address || equipment.location || "Location not set"}</span>
                                 </div>
                                 {avgRating && (
                                     <div className="flex items-center gap-1 bg-amber-50 px-3 py-1.5 rounded-full">
@@ -248,49 +277,46 @@ const EquipmentDetail = () => {
                                     </div>
                                 )}
                             </div>
-                            <p className="text-gray-600 leading-relaxed">
+                            <p className="text-gray-600 leading-relaxed font-medium">
                                 {equipment.description || "Well-maintained agricultural equipment available for rent. Cleaned after every use. Reliable and efficient for all farming needs."}
                             </p>
                         </div>
 
-                        {/* Owner card */}
                         {owner && (
                             <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 flex items-center gap-4">
-                                <div className="w-14 h-14 bg-green-100 rounded-2xl flex items-center justify-center text-2xl flex-shrink-0">👨‍🌾</div>
+                                <div className="w-14 h-14 bg-green-100 rounded-2xl flex items-center justify-center text-2xl flex-shrink-0 animate-pulse">👨‍🌾</div>
                                 <div className="flex-1">
                                     <div className="flex items-center gap-2">
                                         <p className="font-bold text-gray-900">{owner.name}</p>
-                                        <MdVerified className="h-4 w-4 text-green-500" title="Verified Owner" />
+                                        <MdVerified className="h-4 w-4 text-green-500" />
                                     </div>
-                                    <p className="text-sm text-gray-500">{owner.village} · Equipment Owner</p>
+                                    <p className="text-sm text-gray-500 font-bold">{owner.village} · Certified Owner</p>
                                 </div>
-                                <span className="badge badge-green">⭐ {owner.rating || "New"}</span>
+                                <span className="badge badge-green font-bold">⭐ {owner.rating || "TOP"}</span>
                             </div>
                         )}
 
-                        {/* Reviews */}
                         <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
                             <h3 className="text-xl font-bold text-gray-900 mb-5">Reviews</h3>
                             {reviews.length === 0 ? (
-                                <p className="text-gray-400 text-sm py-4">No reviews yet. Be the first!</p>
+                                <p className="text-gray-400 text-sm py-4">No reviews yet.</p>
                             ) : (
                                 <div className="space-y-4 mb-6">
                                     {reviews.map((r, i) => (
                                         <div key={i} className="border-b border-gray-50 pb-4 last:border-0">
                                             <div className="flex items-center justify-between mb-1">
-                                                <p className="font-semibold text-gray-900 text-sm">{r.userName}</p>
+                                                <p className="font-bold text-gray-900 text-sm">{r.userName}</p>
                                                 <div className="flex text-amber-400 text-sm">{"★".repeat(r.rating)}{"☆".repeat(5 - r.rating)}</div>
                                             </div>
-                                            <p className="text-gray-600 text-sm">{r.text}</p>
+                                            <p className="text-gray-600 text-sm italic">"{r.text}"</p>
                                         </div>
                                     ))}
                                 </div>
                             )}
 
-                            {/* Review form */}
                             {user && (
                                 <form onSubmit={handleReview} className="border-t border-gray-100 pt-4">
-                                    <p className="font-semibold text-gray-700 mb-3 text-sm">Leave a review</p>
+                                    <p className="font-bold text-gray-700 mb-3 text-sm">Leave a review</p>
                                     <div className="flex gap-1 mb-3">
                                         {[1, 2, 3, 4, 5].map((s) => (
                                             <button type="button" key={s} onClick={() => setRating(s)} className={`text-2xl transition ${s <= rating ? "text-amber-400" : "text-gray-200"}`}>★</button>
@@ -302,160 +328,86 @@ const EquipmentDetail = () => {
                                         required
                                         rows={3}
                                         placeholder="Share your experience..."
-                                        className="input-field text-sm"
+                                        className="input-field text-sm font-medium"
                                     />
-                                    <button type="submit" className="btn-primary mt-3 text-sm py-2">Submit Review</button>
+                                    <button type="submit" className="btn-primary mt-3 text-sm py-2 font-bold px-6">Submit Review</button>
                                 </form>
                             )}
                         </div>
                     </div>
 
-                    {/* ─── Right: Booking / Purchase Sidebar ─── */}
+                    {/* Booking Sidebar */}
                     <div className="lg:col-span-1">
                         <div className="sticky top-24 bg-white rounded-3xl border border-gray-100 shadow-green-lg p-6">
-
-                            {/* ── Price Header ── */}
                             <div className="mb-6 pb-6 border-b border-gray-100">
                                 {(equipment.listingType === "rent" || !equipment.listingType) && (
                                     <div className="flex items-baseline gap-2">
-                                        <span className="text-4xl font-black text-gray-900">₹{equipment.price}</span>
-                                        <span className="text-gray-500 font-medium">/hour</span>
+                                        <span className="text-4xl font-bold text-gray-900 tracking-tight">₹{equipment.price}</span>
+                                        <span className="text-gray-500 font-bold uppercase text-[10px]">/ hour</span>
                                     </div>
                                 )}
                                 {equipment.listingType === "sell" && (
-                                    <div>
-                                        <p className="text-xs text-orange-600 font-semibold uppercase tracking-wider mb-1">Sale Price</p>
-                                        <div className="flex items-baseline gap-2">
-                                            <span className="text-4xl font-black text-orange-600">₹{equipment.salePrice}</span>
-                                            <span className="text-gray-500 font-medium">one-time</span>
-                                        </div>
+                                    <div className="flex items-baseline gap-2">
+                                        <span className="text-4xl font-bold text-orange-600 tracking-tight">₹{equipment.salePrice}</span>
                                     </div>
                                 )}
                                 {equipment.listingType === "both" && (
-                                    <div className="space-y-2">
-                                        <div className="flex items-center justify-between">
-                                            <div>
-                                                <p className="text-xs text-blue-600 font-semibold uppercase tracking-wider">Rent</p>
-                                                <div className="flex items-baseline gap-1">
-                                                    <span className="text-2xl font-black text-gray-900">₹{equipment.price}</span>
-                                                    <span className="text-gray-400 text-sm">/hr</span>
-                                                </div>
-                                            </div>
-                                            <div className="w-px h-10 bg-gray-200" />
-                                            <div className="text-right">
-                                                <p className="text-xs text-orange-600 font-semibold uppercase tracking-wider">Buy</p>
-                                                <div className="flex items-baseline gap-1 justify-end">
-                                                    <span className="text-2xl font-black text-orange-600">₹{equipment.salePrice}</span>
-                                                </div>
-                                            </div>
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div>
+                                            <p className="text-[10px] font-bold text-blue-600 uppercase">Rent</p>
+                                            <p className="text-2xl font-bold text-gray-900 tracking-tight">₹{equipment.price}</p>
+                                        </div>
+                                        <div className="text-right">
+                                            <p className="text-[10px] font-bold text-orange-600 uppercase">Buy</p>
+                                            <p className="text-2xl font-bold text-gray-900 tracking-tight">₹{equipment.salePrice}</p>
                                         </div>
                                     </div>
                                 )}
                             </div>
 
-                            {/* ── Owner view ── */}
                             {authUser && equipment.ownerId === authUser.uid ? (
                                 <div className="text-center py-6">
-                                    <div className="w-16 h-16 bg-green-100 rounded-2xl flex items-center justify-center mx-auto mb-4 text-3xl">🚜</div>
-                                    <p className="font-bold text-gray-900 text-lg mb-1">This is your listing</p>
-                                    <p className="text-gray-500 text-sm mb-5">Share it with other farmers!</p>
-                                    <button onClick={() => navigate("/dashboard")}
-                                        className="w-full py-3 rounded-2xl bg-green-600 text-white font-bold hover:bg-green-700 transition-all shadow-green">
+                                    <button onClick={() => navigate("/dashboard")} className="w-full py-3 rounded-2xl bg-green-600 text-white font-bold hover:bg-green-700 transition-all shadow-green">
                                         Manage in Dashboard →
                                     </button>
                                 </div>
-
-                            ) : equipment.listingType === "sell" ? (
-                                /* ── SELL: Contact-to-buy panel ── */
-                                <div className="space-y-4">
-                                    <div className="bg-orange-50 border border-orange-100 rounded-2xl p-4">
-                                        <p className="font-bold text-orange-800 mb-1">💰 Available for Purchase</p>
-                                        <p className="text-sm text-orange-700">This equipment is listed for outright sale. Contact the owner to negotiate and finalise the deal.</p>
-                                    </div>
-                                    <div className="bg-gray-50 rounded-2xl p-4 space-y-2">
-                                        <div className="flex justify-between">
-                                            <span className="text-gray-600 text-sm">Sale Price</span>
-                                            <span className="font-black text-orange-600 text-lg">₹{equipment.salePrice?.toLocaleString("en-IN")}</span>
-                                        </div>
-                                    </div>
-                                    {!authUser ? (
-                                        <button onClick={() => navigate("/auth")}
-                                            className="w-full py-4 rounded-2xl font-bold text-lg bg-orange-500 text-white hover:bg-orange-600 shadow-lg transition-all">
-                                            Login to Contact 🔐
-                                        </button>
-                                    ) : (
-                                        <button onClick={() => {
-                                            toast.success("Interest noted! Contact the owner via Dashboard.");
-                                        }} className="w-full py-4 rounded-2xl font-bold text-lg bg-orange-500 text-white hover:bg-orange-600 shadow-lg transition-all hover:-translate-y-0.5">
-                                            🛒 Express Interest
-                                        </button>
-                                    )}
-                                    <p className="text-xs text-gray-400 text-center">Price may be negotiable — contact the owner</p>
-                                </div>
-
                             ) : (
-                                /* ── RENT or BOTH: Booking form ── */
                                 <form onSubmit={handleBooking} className="space-y-4">
-                                    {equipment.listingType === "both" && (
-                                        <p className="text-xs text-blue-600 font-semibold bg-blue-50 rounded-xl px-3 py-2">
-                                            📅 Booking below is for <strong>rental only</strong>. For purchase, contact the owner.
-                                        </p>
+                                    {equipment.listingType !== "sell" && (
+                                        <>
+                                            <div>
+                                                <label className="label flex items-center gap-1.5"><MdCalendarToday className="text-green-600" />Date</label>
+                                                <input type="date" required min={format(new Date(), "yyyy-MM-dd")} value={bookDate} onChange={(e) => setBookDate(e.target.value)}
+                                                    className="input-field font-bold" />
+                                            </div>
+                                            <div>
+                                                <label className="label flex items-center gap-1.5"><MdAccessTime className="text-green-600" />Start Time</label>
+                                                <input type="time" required value={startTime} onChange={(e) => setStartTime(e.target.value)}
+                                                    className="input-field font-bold" />
+                                            </div>
+                                            <div>
+                                                <label className="label font-bold text-sm">Duration: <span className="text-green-600">{duration}h</span></label>
+                                                <input type="range" min={1} max={12} value={duration} onChange={(e) => setDuration(Number(e.target.value))}
+                                                    className="w-full accent-green-600" />
+                                            </div>
+                                        </>
                                     )}
-                                    <div>
-                                        <label className="label flex items-center gap-1.5"><MdCalendarToday className="text-green-600" />Date</label>
-                                        <input type="date" required
-                                            min={format(new Date(), "yyyy-MM-dd")}
-                                            value={bookDate} onChange={(e) => setBookDate(e.target.value)}
-                                            className="input-field" />
-                                    </div>
-                                    <div>
-                                        <label className="label flex items-center gap-1.5"><MdAccessTime className="text-green-600" />Start Time</label>
-                                        <input type="time" required
-                                            value={startTime} onChange={(e) => setStartTime(e.target.value)}
-                                            className="input-field" />
-                                    </div>
-                                    <div>
-                                        <label className="label">Duration (hours): <span className="text-green-600 font-bold">{duration}h</span></label>
-                                        <input type="range" min={1} max={12} value={duration}
-                                            onChange={(e) => setDuration(Number(e.target.value))}
-                                            className="w-full accent-green-600 mt-1" />
-                                        <div className="flex justify-between text-xs text-gray-400 mt-1"><span>1h</span><span>12h</span></div>
-                                    </div>
 
-                                    {/* Cost breakdown */}
-                                    <div className="bg-green-50 rounded-2xl p-4 border border-green-100 space-y-2">
-                                        <div className="flex justify-between text-sm text-gray-600">
-                                            <span>₹{equipment.price} × {duration} hours</span>
-                                            <span>₹{equipment.price * duration}</span>
-                                        </div>
-                                        <div className="flex justify-between font-black text-lg border-t border-green-200 pt-2">
-                                            <span className="text-gray-900">Total</span>
-                                            <span className="text-green-700">₹{equipment.price * duration}</span>
-                                        </div>
+                                    <div className="bg-green-50 rounded-2xl p-4 border border-green-100 flex justify-between items-center">
+                                        <span className="font-bold text-gray-900">Total Price</span>
+                                        <span className="text-2xl font-bold text-green-700 tracking-tighter">₹{getBookingTotal(equipment, duration)}</span>
                                     </div>
 
                                     {!authUser ? (
-                                        <button type="button" onClick={() => navigate("/auth")}
-                                            className="w-full py-4 rounded-2xl font-bold text-lg bg-green-600 text-white hover:bg-green-700 transition-all shadow-green">
+                                        <button type="button" onClick={() => navigate("/auth")} className="w-full btn-primary py-4 rounded-xl font-bold">
                                             Login to Book 🔐
                                         </button>
                                     ) : (
                                         <motion.button whileTap={{ scale: 0.97 }} type="submit" disabled={bookLoading}
-                                            className={`w-full py-4 rounded-2xl font-bold text-lg shadow-green transition-all ${bookLoading
-                                                ? "bg-green-400 text-white cursor-not-allowed"
-                                                : "bg-green-600 text-white hover:bg-green-700 hover:-translate-y-0.5"}`}>
-                                            {bookLoading ? (
-                                                <span className="flex items-center justify-center gap-2">
-                                                    <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24" fill="none">
-                                                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                                                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z" />
-                                                    </svg>
-                                                    Confirming...
-                                                </span>
-                                            ) : "Book Now 🚜"}
+                                            className={`w-full py-4 rounded-xl font-bold text-lg shadow-green transition-all ${bookLoading ? "bg-green-300 cursor-not-allowed" : "bg-green-600 hover:bg-green-700 text-white"}`}>
+                                            {bookLoading ? "Processing..." : "Pay & Book Now"}
                                         </motion.button>
                                     )}
-                                    <p className="text-xs text-gray-400 text-center">Free cancellation up to 24 hours before</p>
                                 </form>
                             )}
                         </div>
@@ -464,6 +416,12 @@ const EquipmentDetail = () => {
             </div>
         </div>
     );
+};
+
+const getBookingTotal = (eq, dur) => {
+    if (!eq) return 0;
+    if (eq.listingType === "sell") return eq.salePrice;
+    return eq.price * dur;
 };
 
 export default EquipmentDetail;

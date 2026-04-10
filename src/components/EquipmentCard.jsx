@@ -11,7 +11,7 @@ const LISTING_BADGE = {
     both: { label: "Rent & Sell", cls: "bg-purple-500 text-white", icon: <MdHandshake className="h-3 w-3" /> },
 };
 
-const EquipmentCard = ({ equipment, index = 0 }) => {
+const EquipmentCard = ({ equipment, index = 0, state = null }) => {
     const { id, name, type, price, salePrice, location, imageUrl, rating, status, listingType = "rent", ownerName, _distKm } = equipment;
     const badge = LISTING_BADGE[listingType] || LISTING_BADGE.rent;
 
@@ -46,13 +46,13 @@ const EquipmentCard = ({ equipment, index = 0 }) => {
                 <div className="absolute top-3 right-3">
                     {(listingType === "rent" || listingType === "both") && (
                         <div className="bg-white/95 backdrop-blur-sm px-3 py-1 rounded-full shadow-lg text-right">
-                            <span className="text-sm font-black text-green-700">₹{price}</span>
+                            <span className="text-sm font-bold text-green-700">₹{price}</span>
                             <span className="text-xs text-gray-500">/hr</span>
                         </div>
                     )}
                     {listingType === "sell" && (
                         <div className="bg-white/95 backdrop-blur-sm px-3 py-1 rounded-full shadow-lg">
-                            <span className="text-sm font-black text-orange-600">₹{salePrice || price}</span>
+                            <span className="text-sm font-bold text-orange-600">₹{salePrice || price}</span>
                             <span className="text-xs text-gray-500"> sell</span>
                         </div>
                     )}
@@ -82,11 +82,11 @@ const EquipmentCard = ({ equipment, index = 0 }) => {
                     <div className="flex gap-2 mb-3">
                         <div className="flex-1 bg-blue-50 rounded-xl px-3 py-2 text-center">
                             <p className="text-xs text-blue-600 font-medium">Rent</p>
-                            <p className="font-black text-blue-700 text-sm">₹{price}/hr</p>
+                            <p className="font-bold text-blue-700 text-sm">₹{price}/hr</p>
                         </div>
                         <div className="flex-1 bg-orange-50 rounded-xl px-3 py-2 text-center">
                             <p className="text-xs text-orange-600 font-medium">Buy</p>
-                            <p className="font-black text-orange-600 text-sm">₹{salePrice || "—"}</p>
+                            <p className="font-bold text-orange-600 text-sm">₹{salePrice || "—"}</p>
                         </div>
                     </div>
                 )}
@@ -101,6 +101,7 @@ const EquipmentCard = ({ equipment, index = 0 }) => {
 
                     <Link
                         to={`/equipment/${id}`}
+                        state={state}
                         className="px-4 py-2 bg-green-600 text-white text-sm font-bold rounded-xl hover:bg-green-700 transition-all shadow-md hover:shadow-green-200 hover:-translate-y-0.5"
                     >
                         View Details →

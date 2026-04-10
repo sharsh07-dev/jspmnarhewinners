@@ -503,7 +503,7 @@ const PesticideExchange = () => {
                             <span className="w-2 h-2 rounded-full bg-green-300 animate-pulse" />
                             Smart Marketplace
                         </div>
-                        <h1 className="text-4xl md:text-5xl font-black font-display tracking-tight mb-4">
+                        <h1 className="text-3xl md:text-4xl font-bold font-display tracking-tight mb-4">
                             Agro <span className="text-green-400">Exchange</span>
                         </h1>
                         <p className="text-green-100 text-lg max-w-2xl leading-relaxed mb-8">
@@ -534,105 +534,58 @@ const PesticideExchange = () => {
             </div>
 
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
-                    
-                    {/* Left Sidebar: Filters & Insights */}
-                    <div className="lg:col-span-1 space-y-6">
-                        
-                        {/* Insights Panel */}
-                        <div className="bg-white rounded-3xl p-6 shadow-sm border border-gray-100">
-                            <h3 className="font-black text-gray-900 text-lg mb-4 flex items-center gap-2">
-                                <FaRecycle className="text-green-600" /> Platform Impact
-                            </h3>
-                            <div className="space-y-4">
-                                <div className="p-4 bg-green-50 rounded-2xl border border-green-100">
-                                    <p className="text-xs font-bold text-green-800 uppercase tracking-wide mb-1">Waste Reduced</p>
-                                    <p className="text-3xl font-black text-green-700">1,240 <span className="text-lg font-bold">Liters</span></p>
-                                </div>
-                                <div className="p-4 bg-blue-50 rounded-2xl border border-blue-100">
-                                    <p className="text-xs font-bold text-blue-800 uppercase tracking-wide mb-1">Money Saved</p>
-                                    <p className="text-3xl font-black text-blue-700">₹4.2<span className="text-lg font-bold">L</span></p>
-                                </div>
-                                <div className="p-4 bg-emerald-50 rounded-2xl border border-emerald-100 flex items-center justify-between">
-                                    <div>
-                                        <p className="text-xs font-bold text-emerald-800 uppercase tracking-wide mb-1">Sustainability</p>
-                                        <p className="text-xl font-black text-emerald-700">Top 15%</p>
-                                    </div>
-                                    <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center shadow-sm">
-                                        <MdEco className="text-emerald-500 text-2xl" />
-                                    </div>
-                                </div>
+                {/* Horizontal Filters Section */}
+                <div className="bg-white rounded-[24px] p-6 shadow-sm border border-gray-100 mb-8">
+                    <div className="flex flex-col md:flex-row md:items-center gap-8">
+                        {/* Crop Filter */}
+                        <div className="flex-1">
+                            <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-3 block">Filter by Crop</label>
+                            <div className="flex flex-wrap gap-2">
+                                {CROPS.map(c => (
+                                    <button 
+                                        key={c}
+                                        onClick={() => setFilterCrop(c)}
+                                        className={`px-4 py-2 rounded-xl text-xs font-bold transition-all border ${filterCrop === c ? 'bg-green-600 text-white border-green-600 shadow-md' : 'bg-gray-50 text-gray-500 border-transparent hover:border-green-300'}`}
+                                    >
+                                        {c}
+                                    </button>
+                                ))}
                             </div>
                         </div>
 
-                        {/* Filters */}
-                        <div className="bg-white rounded-3xl p-6 shadow-sm border border-gray-100">
-                            <h3 className="font-black text-gray-900 text-lg mb-4 flex items-center gap-2">
-                                <MdFilterList className="text-green-600" /> Filters
-                            </h3>
-                            
-                            <div className="mb-5">
-                                <label className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-3 block">Crop Type</label>
-                                <div className="flex flex-wrap gap-2">
-                                    {CROPS.map(c => (
-                                        <button 
-                                            key={c}
-                                            onClick={() => setFilterCrop(c)}
-                                            className={`px-3 py-1.5 rounded-xl text-sm font-semibold transition-colors duration-200 ${filterCrop === c ? 'bg-green-600 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}
-                                        >
-                                            {c}
-                                        </button>
-                                    ))}
-                                </div>
-                            </div>
+                        {/* Divider for Desktop */}
+                        <div className="hidden md:block w-px h-10 bg-gray-100 mx-2" />
 
-                            <div>
-                                <label className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-3 block">Listing Type</label>
-                                <div className="flex flex-col gap-2">
-                                    {TYPES.map(t => (
-                                        <button 
-                                            key={t.id}
-                                            onClick={() => setFilterType(t.id)}
-                                            className={`px-4 py-2.5 rounded-xl text-sm font-bold flex items-center justify-between border-2 transition-all ${filterType === t.id ? 'border-green-500 bg-green-50 text-green-700' : 'border-transparent bg-gray-50 text-gray-600 hover:bg-gray-100'}`}
-                                        >
-                                            {t.label}
-                                            {filterType === t.id && <MdCheckCircle className="text-green-500" />}
-                                        </button>
-                                    ))}
-                                </div>
+                        {/* Listing Type Filter */}
+                        <div className="flex-1">
+                            <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-3 block">Listing Type</label>
+                            <div className="flex flex-wrap gap-2">
+                                {TYPES.map(t => (
+                                    <button 
+                                        key={t.id}
+                                        onClick={() => setFilterType(t.id)}
+                                        className={`px-4 py-2 rounded-xl text-xs font-bold flex items-center gap-2 border transition-all ${filterType === t.id ? 'bg-gray-900 text-white border-gray-900 shadow-md' : 'bg-gray-50 text-gray-500 border-transparent hover:border-gray-300'}`}
+                                    >
+                                        {t.label}
+                                    </button>
+                                ))}
                             </div>
                         </div>
                     </div>
+                </div>
 
-                    {/* Main Feed */}
-                    <div className="lg:col-span-3 space-y-6">
+                {/* Main Feed - Now Full Width */}
+                <div className="space-y-6">
                         
-                        {/* AI Suggestions Panel */}
-                        <motion.div 
-                            initial={{ opacity: 0, y: 10 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            className="bg-gradient-to-r from-blue-50 to-indigo-50 border-l-4 border-blue-500 rounded-2xl p-5 flex items-start gap-4 shadow-sm"
-                        >
-                            <div className="bg-white p-2 rounded-xl shadow-sm text-blue-500">
-                                <span className="text-2xl">🤖</span>
-                            </div>
-                            <div>
-                                <h4 className="font-bold text-gray-900 flex items-center gap-2">
-                                    AI Recommendation for Cotton Farmers
-                                </h4>
-                                <p className="text-sm text-gray-600 mt-1 leading-relaxed">
-                                    We noticed high pest activity in your region. Consider adopting <span className="font-bold text-blue-700">Neem-based organic sprays</span> available nearby to maintain soil health while naturally acting as a deterrent.
-                                </p>
-                            </div>
-                        </motion.div>
+  
 
                         <div className="flex items-center justify-between mb-4">
                             <h2 className="text-xl font-bold text-gray-900">Available Near You</h2>
                             <span className="text-sm font-semibold text-gray-500">{filteredListings.length} items found</span>
                         </div>
 
-                        {/* Listings Grid */}
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                        {/* Listings Grid - More compact 3-column layout */}
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
                             <AnimatePresence>
                                 {filteredListings.map(item => {
                                     const expStatus = getExpiryStatus(item.expiry);
@@ -645,8 +598,8 @@ const PesticideExchange = () => {
                                             key={item.id} 
                                             className="bg-white rounded-3xl border border-gray-100 shadow-sm hover:shadow-xl hover:border-green-200 transition-all overflow-hidden group flex flex-col"
                                         >
-                                            <div className="relative h-48 overflow-hidden bg-gray-100">
-                                                <img src={item.image} alt={item.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                                            <div className="relative h-40 overflow-hidden bg-gray-100">
+                                                <img src={item.image} alt={item.name} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" />
                                                 
                                                 {/* Top Badges */}
                                                 <div className="absolute top-3 left-3 flex flex-col gap-2">
@@ -691,11 +644,11 @@ const PesticideExchange = () => {
                                                 <div className="mt-auto pt-4 border-t border-gray-50 flex items-center justify-between">
                                                     <div>
                                                         {item.price > 0 ? (
-                                                            <p className="text-xl font-black text-green-700">₹{item.price}</p>
+                                                            <p className="text-lg font-bold text-green-700">₹{item.price}</p>
                                                         ) : (
-                                                            <p className="text-xl font-black text-emerald-600">FREE</p>
+                                                            <p className="text-lg font-bold text-emerald-600">FREE</p>
                                                         )}
-                                                        <p className="text-xs text-gray-500 flex items-center gap-1 mt-0.5">
+                                                        <p className="text-[10px] text-gray-500 flex items-center gap-1 mt-0.5 font-bold">
                                                             <MdLocationOn className="text-green-500"/> {item.distance || "Near you"}
                                                         </p>
                                                     </div>
@@ -731,8 +684,7 @@ const PesticideExchange = () => {
                     </div>
                 </div>
             </div>
-        </div>
-    );
+        );
 };
 
 export default PesticideExchange;

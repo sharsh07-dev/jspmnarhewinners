@@ -10,10 +10,12 @@ import useAuthStore from "./store/useAuthStore";
 
 import Navbar from "./components/Navbar";
 import Sidebar from "./components/Sidebar";
+import useUIStore from "./store/useUIStore";
 import Footer from "./components/Footer";
 
 import HomePage from "./pages/HomePage";
 import EquipmentListing from "./pages/EquipmentListing";
+import DiscoveryWizard from "./pages/DiscoveryWizard";
 import EquipmentDetail from "./pages/EquipmentDetail";
 import Dashboard from "./pages/Dashboard";
 import AdminDashboard from "./pages/AdminDashboard"; // Replaces AdminPanel for specific dashboard
@@ -27,10 +29,11 @@ import LiveMandiPrices from "./pages/LiveMandiPrices";
 import SchemeDiscovery from "./pages/SchemeDiscovery";
 import FarmerChatbot from "./components/FarmerChatbot";
 
-function App() {
-  const { setAuthUser, setUser, setLoading, user, isLoading } = useAuthStore();
+const App = () => {
+    const { setAuthUser, setUser, setLoading, user, isLoading } = useAuthStore();
+    const { isSidebarCollapsed } = useUIStore();
 
-  useEffect(() => {
+    useEffect(() => {
     let userUnsub;
     const authUnsub = onAuthStateChanged(auth, (firebaseUser) => {
       if (firebaseUser) {
@@ -69,11 +72,10 @@ function App() {
         <Navbar />
         <Sidebar />
         {(!user || user?.role === "farmer") && <FarmerChatbot />}
-        
-        <main className={`flex-grow transition-all duration-300 ${user ? "lg:pl-64 pt-[68px]" : ""}`}>
+        <main className={`flex-grow transition-all duration-300 ${user ? (isSidebarCollapsed ? "lg:pl-16" : "lg:pl-56") : ""} pt-[68px]`}>
           <Routes>
             <Route path="/" element={!user ? <HomePage /> : (user.role === 'farmer' ? <Navigate to="/equipment" replace /> : <Navigate to={`/${user.role}`} replace />)} />
-            <Route path="/equipment" element={(!user || user?.role === "farmer") ? <EquipmentListing /> : <Navigate to="/" replace />} />
+            <Route path="/equipment" element={(!user || user?.role === "farmer") ? <DiscoveryWizard /> : <Navigate to="/" replace />} />
             <Route path="/equipment/:id" element={(!user || user?.role === "farmer") ? <EquipmentDetail /> : <Navigate to="/" replace />} />
             <Route path="/auth" element={!user ? <AuthPage /> : <Navigate to={user.role === 'farmer' ? '/equipment' : `/${user.role === 'admin' ? 'admin' : user.role}`} replace />} />
             <Route path="/dashboard" element={user?.role === "farmer" ? <Dashboard /> : <Navigate to="/" replace />} />

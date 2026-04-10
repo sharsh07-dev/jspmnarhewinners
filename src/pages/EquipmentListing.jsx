@@ -83,7 +83,7 @@ const AddEquipmentModal = ({ open, onClose, authUser, user }) => {
                 className="bg-white rounded-3xl shadow-2xl w-full max-w-xl max-h-[90vh] overflow-y-auto"
             >
                 <div className="sticky top-0 bg-white border-b border-gray-100 px-6 pt-6 pb-4 flex items-center justify-between rounded-t-3xl">
-                    <h2 className="text-xl font-black text-gray-900">List Your Equipment 🌾</h2>
+                    <h2 className="text-xl font-bold text-gray-900">List Your Equipment 🌾</h2>
                     <button onClick={onClose} className="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center hover:bg-gray-200 transition">
                         <MdClose className="h-5 w-5 text-gray-600" />
                     </button>
@@ -341,48 +341,51 @@ const EquipmentListing = () => {
     ].filter(Boolean);
 
     return (
-        <div className="min-h-screen bg-gray-50 pt-[68px]">
+        <div className="min-h-screen bg-gray-50 ">
             <AddEquipmentModal open={showAddModal} onClose={() => setShowAddModal(false)} authUser={authUser} user={user} />
 
             {/* ── Header Banner ── */}
-            <div className="bg-gradient-to-br from-green-800 to-emerald-700 text-white">
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
-                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
-                        <div className="flex flex-col md:flex-row md:items-center gap-6">
+            <div className="bg-gradient-to-br from-green-800 to-emerald-700 text-white border-b border-green-900/30">
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 md:py-12">
+                    <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-8">
+                        
+                        {/* Heading & Action */}
+                        <div className="flex-1 space-y-5">
                             <div>
-                                <div className="flex items-center gap-2 text-green-300 text-sm font-semibold mb-2">
-                                    <span className="w-2 h-2 bg-green-400 rounded-full animate-pulse inline-block" />
-                                    Live Equipment Marketplace
+                                <div className="flex items-center gap-2 text-green-300 text-xs font-bold uppercase tracking-widest mb-3">
+                                    <span className="w-2 h-2 bg-green-400 rounded-full animate-pulse shadow-[0_0_10px_rgba(74,222,128,0.5)]" />
+                                    Live Marketplace
                                 </div>
-                                <h1 className="text-3xl md:text-4xl font-black font-display">
-                                    Find Equipment Near You 🚜
+                                <h1 className="text-2xl md:text-3xl font-bold font-display tracking-tight leading-tight">
+                                    Find Equipment <span className="text-green-400">Near You</span> 🚜
                                 </h1>
-                                <p className="text-green-100 mt-1 text-sm">Rent or buy equipment from farmers in your area</p>
+                                <p className="text-green-100/80 mt-2 text-sm max-w-md leading-relaxed">
+                                    Browse, rent, or buy high-quality agricultural tools directly from verified farmers in your community.
+                                </p>
                             </div>
 
-                            {/* List button added here */}
                             {user && (
                                 <button
                                     onClick={() => setShowAddModal(true)}
-                                    className="flex items-center gap-2 px-6 py-3 bg-white text-green-800 font-bold rounded-2xl hover:bg-green-50 transition-all shadow-xl"
+                                    className="inline-flex items-center gap-2 px-5 py-2.5 bg-green-500 hover:bg-green-400 text-white font-bold rounded-xl transition-all shadow-lg hover:-translate-y-0.5"
                                 >
-                                    <MdAddCircle className="h-5 w-5 text-green-600" />
+                                    <MdAddCircle className="h-5 w-5" />
                                     List My Equipment
                                 </button>
                             )}
                         </div>
 
-                        {/* Quick stats */}
-                        <div className="flex gap-3 flex-wrap">
+                        {/* Quick stats - Compact Grid */}
+                        <div className="grid grid-cols-2 sm:flex gap-3">
                             {[
-                                { label: "Total Listings", value: stats.total, color: "bg-white/10" },
-                                { label: "For Rent", value: stats.forRent, color: "bg-blue-500/30" },
-                                { label: "For Sale", value: stats.forSale, color: "bg-orange-500/30" },
-                                { label: "Avg. ₹/hr", value: `₹${stats.avgPrice}`, color: "bg-purple-500/30" },
+                                { label: "Total Items", value: stats.total, color: "bg-white/5" },
+                                { label: "For Rent", value: stats.forRent, color: "bg-blue-500/20" },
+                                { label: "For Sale", value: stats.forSale, color: "bg-orange-500/20" },
+                                { label: "Avg ₹/hr", value: `₹${stats.avgPrice}`, color: "bg-purple-500/20" },
                             ].map((s, i) => (
-                                <div key={i} className={`${s.color} backdrop-blur-sm rounded-2xl px-4 py-3 border border-white/10 text-center min-w-[80px]`}>
-                                    <p className="font-black text-lg text-white">{s.value}</p>
-                                    <p className="text-xs text-green-200">{s.label}</p>
+                                <div key={i} className={`${s.color} backdrop-blur-md rounded-2xl px-5 py-3 border border-white/10 text-center min-w-[100px] flex flex-col justify-center`}>
+                                    <p className="font-bold text-lg text-white mb-0.5">{s.value}</p>
+                                    <p className="text-[10px] font-bold text-green-300 uppercase tracking-tighter opacity-80">{s.label}</p>
                                 </div>
                             ))}
                         </div>
@@ -564,7 +567,7 @@ const EquipmentListing = () => {
                         className="text-center py-24 bg-white rounded-3xl border-2 border-dashed border-gray-200"
                     >
                         <div className="text-7xl mb-5">🔍</div>
-                        <h3 className="text-2xl font-black text-gray-800 mb-2">No equipment found</h3>
+                        <h3 className="text-2xl font-bold text-gray-800 mb-2">No equipment found</h3>
                         <p className="text-gray-400 mb-6 max-w-md mx-auto">
                             Try adjusting your filters or search term. There may not be any listings for this combination yet.
                         </p>
@@ -618,12 +621,12 @@ const EquipmentListing = () => {
                                         <div className="flex gap-3">
                                             {(eq.listingType === "rent" || !eq.listingType || eq.listingType === "both") && (
                                                 <div className="text-center">
-                                                    <p className="font-black text-green-700 text-lg">₹{eq.price}<span className="text-xs text-gray-400 font-normal">/hr</span></p>
+                                                    <p className="font-bold text-green-700 text-lg">₹{eq.price}<span className="text-xs text-gray-400 font-normal">/hr</span></p>
                                                 </div>
                                             )}
                                             {(eq.listingType === "sell" || eq.listingType === "both") && (
                                                 <div className="text-center">
-                                                    <p className="font-black text-orange-600 text-lg">₹{eq.salePrice || eq.price}<span className="text-xs text-gray-400 font-normal"> sell</span></p>
+                                                    <p className="font-bold text-orange-600 text-lg">₹{eq.salePrice || eq.price}<span className="text-xs text-gray-400 font-normal"> sell</span></p>
                                                 </div>
                                             )}
                                             {eq.rating && (
