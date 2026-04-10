@@ -1,5 +1,5 @@
 import React, { useEffect } from "react";
-import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
+import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from "react-router-dom";
 import { onAuthStateChanged } from "firebase/auth";
 import { ref, onValue } from "firebase/database";
 import { Toaster } from "react-hot-toast";
@@ -30,9 +30,11 @@ import SchemeDiscovery from "./pages/SchemeDiscovery";
 import LabourDiscovery from "./pages/LabourDiscovery";
 import FarmerChatbot from "./components/FarmerChatbot";
 
-const App = () => {
+const AppContent = () => {
     const { setAuthUser, setUser, setLoading, user, isLoading } = useAuthStore();
     const { isSidebarCollapsed } = useUIStore();
+    const location = useLocation();
+    const isHome = location.pathname === "/";
 
     useEffect(() => {
     let userUnsub;
@@ -68,12 +70,11 @@ const App = () => {
   }
 
   return (
-    <Router>
-      <div className="flex flex-col min-h-screen font-display">
+    <div className="flex flex-col min-h-screen font-display">
         <Navbar />
         <Sidebar />
         {(!user || user?.role?.toLowerCase() === "farmer") && <FarmerChatbot />}
-        <main className={`flex-grow transition-all duration-300 ${user ? (isSidebarCollapsed ? "md:pl-16" : "md:pl-56") : ""} pt-[68px]`}>
+        <main className={`flex-grow transition-all duration-300 ${user ? (isSidebarCollapsed ? "md:pl-16" : "md:pl-56") : ""} ${(!user && isHome) ? "" : "pt-[68px]"}`}>
           <Routes>
             <Route path="/" element={!user ? <HomePage /> : (user.role?.toLowerCase() === 'farmer' ? <Navigate to="/equipment" replace /> : <Navigate to={`/${user.role?.toLowerCase()}`} replace />)} />
             <Route path="/equipment" element={(!user || user?.role?.toLowerCase() === "farmer") ? <DiscoveryWizard /> : <Navigate to="/" replace />} />
@@ -111,8 +112,13 @@ const App = () => {
           }}
         />
       </div>
+    );
+};
+
+const App = () => (
+    <Router>
+        <AppContent />
     </Router>
-  );
-}
+);
 
 export default App;
