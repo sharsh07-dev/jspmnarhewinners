@@ -7,6 +7,7 @@ import { ref, onValue, push, set } from "firebase/database";
 import { compressAndUpload } from "../services/cloudinary";
 import { getUserLocation, reverseGeocode } from "../utils/geo";
 import toast from "react-hot-toast";
+import { generateGSTInvoice } from "../utils/invoiceGenerator";
 import {
     MdSearch, MdLocationOn, MdFilterList, MdEco, MdVerified,
     MdWarning, MdCheckCircle, MdLocalOffer, MdShare, MdVolunteerActivism,
@@ -315,7 +316,18 @@ const RequestPesticideModal = ({ item, step, setStep, onClose, user, authUser })
     };
 
     const handlePrint = () => {
-        window.print();
+        toast.success("Generating GST Invoice PDF...");
+        generateGSTInvoice(
+            { 
+                id: Math.random().toString(36).substr(2, 9).toUpperCase(), 
+                price: parseFloat(item.price) || 0, 
+                equipmentName: item.name, 
+                duration: item.quantity,
+                createdAt: new Date().toISOString() 
+            },
+            { name: item.ownerName || "AgroShare Vendor", address: "Local Hub", state: "Maharashtra", gstin: "27AABCU9603R1Z2" },
+            { name: user?.name || "Farmer", address: user?.village || "Local", state: "Maharashtra" }
+        );
     };
 
     return (

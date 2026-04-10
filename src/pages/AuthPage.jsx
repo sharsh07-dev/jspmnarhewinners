@@ -54,13 +54,14 @@ const AuthPage = () => {
         }
     };
 
-    const processSuccessfulLogin = (uid, currentRole, phoneOrEmail, userName = "") => {
+    const processSuccessfulLogin = (uid, currentRole, phoneOrEmail, userName = "", passToken = "") => {
         // Save device session persistently
         localStorage.setItem("agroshare_saved_device", JSON.stringify({
             uid,
             role: currentRole,
             identifier: phoneOrEmail,
-            name: userName || "User"
+            name: userName || "User",
+            token: passToken
         }));
         
         toast.success("Welcome to AgroShare! 👋");
@@ -87,14 +88,14 @@ const AuthPage = () => {
                 if (snap.exists() && snap.val().role) {
                     userRole = snap.val().role;
                 }
-                processSuccessfulLogin(creds.user.uid, userRole, email, snap.exists() ? snap.val().name : "User");
+                processSuccessfulLogin(creds.user.uid, userRole, email, snap.exists() ? snap.val().name : "User", password);
             } else {
                 const { user } = await createUserWithEmailAndPassword(auth, email, password);
                 await saveUserToDB(user.uid, {
                     name, email, phone, village,
                     role: userRole,
                 });
-                processSuccessfulLogin(user.uid, userRole, email, name);
+                processSuccessfulLogin(user.uid, userRole, email, name, password);
             }
         } catch (err) {
             toast.error(err.message || "Failed to authenticate.");
@@ -137,7 +138,7 @@ const AuthPage = () => {
                     if (snap.val().role) currentRole = snap.val().role;
                     if (snap.val().name) cName = snap.val().name;
                 }
-                processSuccessfulLogin(creds.user.uid, currentRole, phone, cName);
+                processSuccessfulLogin(creds.user.uid, currentRole, phone, cName, trickPass);
             } catch (loginErr) {
                 // Not found, create user
                 if (loginErr.code === "auth/user-not-found" || loginErr.code === "auth/invalid-credential") {
@@ -145,7 +146,7 @@ const AuthPage = () => {
                     await saveUserToDB(user.uid, {
                         phone, role, email: trickEmail, name: name || "New User"
                     });
-                    processSuccessfulLogin(user.uid, role, phone, name || "New User");
+                    processSuccessfulLogin(user.uid, role, phone, name || "New User", trickPass);
                 } else {
                     throw loginErr;
                 }
@@ -158,14 +159,27 @@ const AuthPage = () => {
     };
 
     // --- SAVED DEVICE LOGIC (MOCK FaceID / PIN) ---
-    const handleSavedDeviceLogin = () => {
+    const handleSavedDeviceLogin = async () => {
         setLoading(true);
-        // Simulate Face ID / Biometrics scan locally
-        setTimeout(() => {
+        try {
+            // Re-authenticate silently into Firebase to ensure session is valid
+            const isEmailLogin = savedDevice.identifier.includes('@');
+            const authEmail = isEmailLogin ? savedDevice.identifier : `${savedDevice.identifier}@agroshare.com`;
+            
+            await signInWithEmailAndPassword(auth, authEmail, savedDevice.token);
+            
+            setTimeout(() => {
+                setLoading(false);
+                toast.success("Biometric / Device verified!", { icon: '✅' });
+                navigate(getDashboardLink(savedDevice.role));
+            }, 800);
+        } catch (err) {
             setLoading(false);
-            toast.success("Biometric / Device verified!", { icon: '✅' });
-            navigate(getDashboardLink(savedDevice.role));
-        }, 1200);
+            toast.error("Session expired. Please log in again.");
+            setSavedDevice(null);
+            setAuthMethod("phone");
+            localStorage.removeItem("agroshare_saved_device");
+        }
     };
 
 

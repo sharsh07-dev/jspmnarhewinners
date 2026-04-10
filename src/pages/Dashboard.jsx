@@ -13,8 +13,11 @@ import {
     MdPerson, MdLocationOn, MdDelete, MdClose,
     MdCheckCircle, MdHourglassEmpty, MdCancel,
     MdNotifications, MdAccessTime, MdShoppingCart,
-    MdPhone, MdMessage, MdInbox, MdDone
+    MdPhone, MdMessage, MdInbox, MdDone, MdReceipt, MdDownload, MdLightbulb,
+    MdReportProblem, MdVideoCall, MdVerifiedUser, MdHistoryEdu
 } from "react-icons/md";
+import { generateGSTInvoice } from "../utils/invoiceGenerator";
+import DamageReportModal from "../components/DamageReportModal";
 import { FaTractor } from "react-icons/fa";
 import { format, isAfter, isBefore, parseISO } from "date-fns";
 
@@ -22,6 +25,7 @@ const TABS = [
     { id: "overview", label: "Overview", icon: <MdTrendingUp /> },
     { id: "bookings", label: "My Bookings", icon: <MdHistory /> },
     { id: "received", label: "Received Bookings", icon: <MdInbox /> },
+    { id: "invoices", label: "Fin & Invoices", icon: <MdReceipt /> },
     { id: "listings", label: "My Listings", icon: <MdList /> },
     { id: "add", label: "Add Equipment", icon: <MdAddCircle /> },
     { id: "notifs", label: "Notifications", icon: <MdNotifications /> },
@@ -54,6 +58,7 @@ const Dashboard = () => {
     const [ownerBookings, setOwnerBookings] = useState([]);
     const [notifications, setNotifications] = useState([]);
     const [bookingStatusTab, setBookingStatusTab] = useState("all");
+    const [selectedBookingForDamage, setSelectedBookingForDamage] = useState(null);
 
     // Add Equipment form
     const [form, setForm] = useState({
@@ -586,9 +591,23 @@ const Dashboard = () => {
                                                                         </button>
                                                                     )}
                                                                     {b.status === "completed" && (
-                                                                        <span className="flex items-center gap-1.5 px-4 py-2 text-sm font-bold rounded-xl bg-purple-50 text-purple-700 border border-purple-200">
-                                                                            ✅ Booking Completed
-                                                                        </span>
+                                                                        <div className="flex flex-col gap-2">
+                                                                            <span className="flex items-center gap-1.5 px-4 py-2 text-sm font-bold rounded-xl bg-purple-50 text-purple-700 border border-purple-200">
+                                                                                ✅ Booking Completed
+                                                                            </span>
+                                                                            {!b.damageReported ? (
+                                                                                <button 
+                                                                                    onClick={() => setSelectedBookingForDamage(b)}
+                                                                                    className="flex items-center justify-center gap-1.5 px-4 py-2 bg-red-50 text-red-600 text-xs font-bold rounded-xl hover:bg-red-100 border border-red-200 transition"
+                                                                                >
+                                                                                    <MdReportProblem /> Report Damage
+                                                                                </button>
+                                                                            ) : (
+                                                                                <span className="flex items-center justify-center gap-1.5 px-4 py-2 bg-amber-50 text-amber-600 text-[10px] font-black uppercase rounded-xl border border-amber-200">
+                                                                                    Claim Under Review 🛡️
+                                                                                </span>
+                                                                            )}
+                                                                        </div>
                                                                     )}
                                                                     {b.status === "cancelled" && (
                                                                         <span className="flex items-center gap-1.5 px-4 py-2 text-sm font-bold rounded-xl bg-red-50 text-red-600 border border-red-200">
@@ -790,6 +809,101 @@ const Dashboard = () => {
                                                 ) : "List Equipment 🌾"}
                                             </button>
                                         </form>
+                                    </div>
+                                )}
+
+                                {/* ─ FIN & INVOICES ─ */}
+                                {tab === "invoices" && (
+                                    <div className="space-y-6">
+                                        <div className="flex items-center justify-between">
+                                            <div>
+                                                <h2 className="text-xl font-bold text-gray-900">Financials & GST Invoices</h2>
+                                                <p className="text-sm text-gray-500 mt-1">Legally compliant GST reporting platform.</p>
+                                            </div>
+                                            <button 
+                                                onClick={() => toast("🤖 xAI Grok: Your equipment rentals are highly efficient. You have accumulated enough GST to claim Input Tax Credit on next harvest's seeds!", { icon: '🤖', duration: 6000 })}
+                                                className="bg-purple-100 text-purple-700 hover:bg-purple-200 px-4 py-2 rounded-xl text-sm font-bold flex items-center gap-2 transition"
+                                            >
+                                                <MdLightbulb /> AI Insights
+                                            </button>
+                                        </div>
+
+                                        {/* Financial Summary */}
+                                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                            <div className="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm flex items-center justify-between">
+                                                <div>
+                                                    <p className="text-sm font-bold text-gray-400">Total Spent</p>
+                                                    <p className="text-2xl font-black text-gray-900 mt-1">₹{myBookings.filter(b => b.status === 'completed').reduce((s,b) => s + (b.totalPrice||0), 0)}</p>
+                                                </div>
+                                                <div className="w-12 h-12 rounded-xl bg-red-50 flex items-center justify-center text-xl">💸</div>
+                                            </div>
+                                            <div className="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm flex items-center justify-between">
+                                                <div>
+                                                    <p className="text-sm font-bold text-gray-400">GST Paid (18%)</p>
+                                                    <p className="text-2xl font-black text-gray-900 mt-1">₹{(myBookings.filter(b => b.status === 'completed').reduce((s,b) => s + (b.totalPrice||0), 0) * 0.18).toFixed(0)}</p>
+                                                </div>
+                                                <div className="w-12 h-12 rounded-xl bg-blue-50 flex items-center justify-center text-xl">🧾</div>
+                                            </div>
+                                            <div className="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm flex items-center justify-between border-b-4 border-b-green-500">
+                                                <div>
+                                                    <p className="text-sm font-bold text-gray-400">Total Earnings</p>
+                                                    <p className="text-2xl font-black text-green-600 mt-1">₹{totalEarnings}</p>
+                                                </div>
+                                                <div className="w-12 h-12 rounded-xl bg-green-50 flex items-center justify-center text-xl">💰</div>
+                                            </div>
+                                        </div>
+
+                                        {/* Invoice List */}
+                                        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+                                            <div className="p-5 border-b border-gray-100 flex items-center justify-between">
+                                                <h3 className="font-bold text-gray-900">Recent Transactions</h3>
+                                                <div className="flex gap-2">
+                                                    <select className="input-field py-1 text-sm bg-gray-50 border-none cursor-pointer">
+                                                        <option>All Transactions</option>
+                                                        <option>Bookings</option>
+                                                        <option>Earnings</option>
+                                                    </select>
+                                                </div>
+                                            </div>
+                                            
+                                            {myBookings.filter(b => b.status === "completed").length === 0 ? (
+                                                <div className="p-12 text-center text-gray-500">
+                                                    <span className="text-4xl block mb-2">🧾</span>
+                                                    <p>No completed transactions yet to generate invoices.</p>
+                                                </div>
+                                            ) : (
+                                                <div className="divide-y divide-gray-100">
+                                                    {myBookings.filter(b => b.status === "completed").map(b => (
+                                                        <div key={b.id} className="p-4 flex flex-col sm:flex-row items-center justify-between gap-4 hover:bg-gray-50 transition">
+                                                            <div className="flex items-center gap-4">
+                                                                <div className="w-12 h-12 rounded-xl bg-green-50 text-green-600 flex items-center justify-center text-lg">🚜</div>
+                                                                <div>
+                                                                    <p className="font-bold text-gray-900 text-sm">{b.equipmentName}</p>
+                                                                    <p className="text-xs text-gray-500 mt-0.5">Txn ID: {b.id.substring(1, 9)} • {b.createdAt ? format(new Date(b.createdAt), "MMM dd, yyyy") : "N/A"}</p>
+                                                                </div>
+                                                            </div>
+                                                            <div className="flex items-center gap-6">
+                                                                <div className="text-right">
+                                                                    <p className="font-black text-gray-900">₹{b.totalPrice}</p>
+                                                                    <p className="text-xs text-gray-400">Incl. ₹{(b.totalPrice * 0.18).toFixed(0)} GST</p>
+                                                                </div>
+                                                                <button 
+                                                                    onClick={() => {
+                                                                        toast.success("Generating GST Invoice PDF...");
+                                                                        generateGSTInvoice({
+                                                                            id: b.id, price: b.totalPrice, equipmentName: b.equipmentName, duration: b.duration, createdAt: b.createdAt
+                                                                        }, { name: "AgroShare Vendor", address: "Local Hub", state: "Maharashtra", gstin: "27AABCU9603R1Z2" }, { name: user?.name, address: user?.village, state: "Maharashtra" });
+                                                                    }}
+                                                                    className="flex items-center gap-1.5 px-4 py-2 bg-gray-900 hover:bg-black text-white text-xs font-bold rounded-xl transition"
+                                                                >
+                                                                    <MdDownload /> Download PDF
+                                                                </button>
+                                                            </div>
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            )}
+                                        </div>
                                     </div>
                                 )}
 
