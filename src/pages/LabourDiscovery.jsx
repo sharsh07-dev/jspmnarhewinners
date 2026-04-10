@@ -1,11 +1,11 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { db } from "../firebase";
-import { ref, onValue, push, set as dbSet } from "firebase/database";
+import { ref, onValue, push, set as dbSet, runTransaction, update } from "firebase/database";
 import { 
     MdLocationOn, MdCalendarToday, MdSearch, MdMyLocation,
     MdNavigateNext, MdNavigateBefore, MdFilterList, MdCheckCircle,
-    MdStar, MdAccessTime, MdSend, MdAttachMoney, MdPerson, MdVerified
+    MdStar, MdAccessTime, MdSend, MdAttachMoney, MdPerson, MdVerified, MdPeople
 } from "react-icons/md";
 import { format, addDays, isBefore } from "date-fns";
 import { getUserLocation, getDistanceKm, reverseGeocode } from "../utils/geo";
@@ -25,11 +25,13 @@ const LabourDiscovery = () => {
     const [isSearching, setIsSearching] = useState(false);
     const [selectedDate, setSelectedDate] = useState(format(addDays(new Date(), 1), "yyyy-MM-dd"));
     const [selectedSkill, setSelectedSkill] = useState("All");
+    const [requiredSlots, setRequiredSlots] = useState(1);
 
     // Data state
     const [labourers, setLabourers] = useState([]);
     const [loading, setLoading] = useState(true);
     const [locLoading, setLocLoading] = useState(false);
+    const [activeCampaign, setActiveCampaign] = useState(null);
 
     // Fetch labourers
     useEffect(() => {
@@ -47,8 +49,23 @@ const LabourDiscovery = () => {
         return () => unsub();
     }, []);
 
+    // Listen to current campaign if established
+    useEffect(() => {
+        if (!currentUser) return;
+        const skillId = selectedSkill === "All" ? "General" : selectedSkill;
+        const campaignId = `${currentUser.uid}_${selectedDate}_${skillId}`;
+        const campRef = ref(db, `labour_campaigns/${campaignId}`);
+        
+        const unsub = onValue(campRef, snap => {
+            if (snap.exists()) setActiveCampaign(snap.val());
+            else setActiveCampaign(null);
+        });
+        return () => unsub();
+    }, [currentUser, selectedDate, selectedSkill]);
+
     // Autocomplete Effect
     useEffect(() => {
+        // ... (unchanged autocomplete logic)
         if (searchQuery.length < 3) {
             setSuggestions([]);
             return;
@@ -85,30 +102,21 @@ const LabourDiscovery = () => {
 
     const filteredLabourers = useMemo(() => {
         if (!location || step < 3) return [];
-        
         let list = labourers;
-
-        // 1. Skill Filter
-        if (selectedSkill !== "All") {
-            list = list.filter(l => l.skills?.includes(selectedSkill));
-        }
-
-        // 2. Availability Filter (Mock: Check b.availability[selectedDate] if it exists)
+        if (selectedSkill !== "All") list = list.filter(l => l.skills?.includes(selectedSkill));
         list = list.filter(l => {
             if (l.availability && l.availability[selectedDate] === false) return false;
             return true;
         });
-
-        // 3. Distance & Sort
         return list.map(l => {
             const dist = (l.lat && l.lng)
                 ? getDistanceKm(location.lat, location.lng, l.lat, l.lng)
-                : (l.village === location.address.split(",")[0] ? 2 : 15); // Fallback to village match
+                : (l.village === location.address.split(",")[0] ? 2 : 15);
             return { ...l, _dist: dist };
         }).sort((a, b) => a._dist - b._dist);
     }, [labourers, location, selectedSkill, selectedDate, step]);
 
-    // ── NEGOTIATION LOGIC ────────────────────────────────
+    // ── NEGOTIATION & SMART QUEUE LOGIC ────────────────────────────────
 
     const handleSendRequest = async (labourer) => {
         if (!currentUser) return toast.error("Log in to hire labour");
@@ -116,22 +124,45 @@ const LabourDiscovery = () => {
         const priceOffer = prompt(`Enter wage offer for ${labourer.name} (Daily base: ₹${labourer.dailyWage || 400})`, labourer.dailyWage || 400);
         if (!priceOffer) return;
 
+        const skillId = selectedSkill === "All" ? "General" : selectedSkill;
+        const campaignId = `${currentUser.uid}_${selectedDate}_${skillId}`;
+
         try {
+            // First time requesting for this campaign? Initialize the queue structure.
+            await runTransaction(ref(db, `labour_campaigns/${campaignId}`), (campaign) => {
+                if (!campaign) {
+                    return {
+                        farmerId: currentUser.uid || "unknown",
+                        date: selectedDate || "",
+                        skill: skillId || "General",
+                        requiredSlots: Number(requiredSlots) || 1,
+                        confirmedCount: 0,
+                        createdAt: new Date().toISOString()
+                    };
+                } else {
+                    // Update requiredSlots seamlessly if they sent another req but bumped slots
+                    campaign.requiredSlots = Number(requiredSlots) || 1;
+                    return campaign;
+                }
+            });
+
             const reqRef = push(ref(db, "labour_requests"));
             await dbSet(reqRef, {
-                farmerId: currentUser.uid,
-                farmerName: currentUser.name,
-                labourerId: labourer.id,
-                labourerName: labourer.name,
-                date: selectedDate,
-                skill: selectedSkill === "All" ? "General" : selectedSkill,
-                offeredPrice: Number(priceOffer),
-                status: "sent", // sent, accepted, countered, rejected
+                campaignId: campaignId || "unknown",
+                farmerId: currentUser.uid || "unknown",
+                farmerName: currentUser.name || currentUser.email || "Farmer",
+                labourerId: labourer.id || "unknown",
+                labourerName: labourer.name || "Labourer",
+                date: selectedDate || "",
+                skill: skillId || "General",
+                offeredPrice: Number(priceOffer) || 400,
+                status: "sent",
                 createdAt: new Date().toISOString()
             });
-            toast.success("Hiring request sent! Tracking negotiation now.");
+            toast.success("Hiring request sent & added to Smart Queue!");
         } catch (err) {
-            toast.error("Request failed");
+            console.error("FATAL ERROR IN SEND REQUEST:", err);
+            toast.error("Request failed: " + (err.message || "Unknown Error"));
         }
     };
 
@@ -214,6 +245,22 @@ const LabourDiscovery = () => {
                     />
                 </div>
 
+                <div>
+                    <label className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-3 flex items-center justify-between">
+                        <span>Workers Required (Slots)</span>
+                        <span className="text-black bg-yellow-100 px-2 py-0.5 rounded-lg text-[10px]">Max 50</span>
+                    </label>
+                    <div className="flex gap-4 items-center">
+                        <button onClick={() => setRequiredSlots(prev => Math.max(1, prev - 1))} className="w-12 h-12 bg-gray-100 rounded-2xl flex items-center justify-center font-bold text-xl hover:bg-gray-200 transition-colors">-</button>
+                        <input 
+                            type="number" min="1" max="50" value={requiredSlots}
+                            onChange={(e) => setRequiredSlots(Math.max(1, parseInt(e.target.value) || 1))}
+                            className="flex-1 p-3 bg-gray-50 rounded-2xl border-2 border-transparent focus:border-blue-500 outline-none font-black text-center text-xl"
+                        />
+                        <button onClick={() => setRequiredSlots(prev => prev + 1)} className="w-12 h-12 bg-gray-100 rounded-2xl flex items-center justify-center font-bold text-xl hover:bg-gray-200 transition-colors">+</button>
+                    </div>
+                </div>
+
                 <div className="flex gap-4 pt-4">
                     <button onClick={() => setStep(1)} className="flex-1 py-4 bg-gray-100 text-gray-600 font-bold rounded-2xl">Back</button>
                     <button onClick={() => setStep(3)} className="flex-[2] py-4 bg-gray-900 text-white font-bold rounded-2xl shadow-xl">Find Local Help</button>
@@ -224,6 +271,22 @@ const LabourDiscovery = () => {
 
     const renderStep3 = () => (
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-8 py-6 pb-20">
+            {/* Smart Queue Banner */}
+            {activeCampaign && (
+                <div className="bg-yellow-500 text-white rounded-[24px] p-5 shadow-lg shadow-yellow-100 flex items-center justify-between gap-4">
+                    <div>
+                        <h3 className="font-black text-lg flex items-center gap-2"><MdPeople /> Hiring Campaign Active!</h3>
+                        <p className="text-xs font-bold text-yellow-100 mt-1 uppercase tracking-widest">
+                            {selectedSkill === "All" ? "General Work" : selectedSkill} • {format(new Date(selectedDate), "MMM dd")}
+                        </p>
+                    </div>
+                    <div className="text-right">
+                        <div className="text-xs font-bold text-yellow-100 mb-1">FILLED SLOTS</div>
+                        <div className="text-2xl font-black">{activeCampaign.confirmedCount || 0} <span className="text-yellow-200 text-lg">/ {activeCampaign.requiredSlots}</span></div>
+                    </div>
+                </div>
+            )}
+
             <div className="bg-white p-6 rounded-[32px] border border-gray-100 shadow-sm flex flex-col md:flex-row justify-between items-center gap-4">
                 <div className="flex items-center gap-4">
                     <div className="px-4 py-2 bg-yellow-50 text-yellow-700 rounded-2xl border border-yellow-100 flex items-center gap-2">

@@ -30,6 +30,8 @@ import MandiAdvisor from "./pages/MandiAdvisor";
 import SchemeDiscovery from "./pages/SchemeDiscovery";
 import LabourDiscovery from "./pages/LabourDiscovery";
 import FarmMonitoring from "./pages/FarmMonitoring";
+import CropDiseaseScanner from "./pages/CropDiseaseScanner";
+import ColdChainLocator from "./pages/ColdChainLocator";
 import FarmerChatbot from "./components/FarmerChatbot";
 
 const AppContent = () => {
@@ -89,6 +91,8 @@ const AppContent = () => {
             <Route path="/mandi-advisor" element={user?.role?.toLowerCase() === "farmer" ? <MandiAdvisor /> : <Navigate to="/" replace />} />
             <Route path="/schemes" element={user?.role?.toLowerCase() === "farmer" ? <SchemeDiscovery /> : <Navigate to="/" replace />} />
             <Route path="/farm-monitoring" element={user?.role?.toLowerCase() === "farmer" ? <FarmMonitoring /> : <Navigate to="/" replace />} />
+            <Route path="/cold-chain" element={user?.role?.toLowerCase() === "farmer" ? <ColdChainLocator /> : <Navigate to="/" replace />} />
+            <Route path="/crop-disease" element={user?.role?.toLowerCase() === "farmer" ? <CropDiseaseScanner /> : <Navigate to="/" replace />} />
             <Route path="/find-labour" element={user?.role?.toLowerCase() === "farmer" ? <LabourDiscovery /> : <Navigate to="/" replace />} />
             <Route path="/admin" element={user?.role?.toLowerCase() === "admin" ? <AdminDashboard /> : <Navigate to="/" replace />} />
             <Route path="/labour" element={user?.role?.toLowerCase() === "labour" ? <LabourDashboard /> : <Navigate to="/" replace />} />

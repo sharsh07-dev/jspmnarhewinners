@@ -297,7 +297,7 @@ const HomePage = () => {
                         className="inline-flex items-center gap-2 bg-green-500/25 text-green-300 border border-green-500/40 px-5 py-2 rounded-full text-sm font-semibold mb-6"
                     >
                         <span className="w-2 h-2 bg-green-400 rounded-full animate-pulse" />
-                        India's #1 Agri Equipment Platform 🌾
+                        India's Unified Agri-Service Platform 🌾
                     </motion.div>
 
                     {/* Heading */}
@@ -307,9 +307,9 @@ const HomePage = () => {
                         transition={{ delay: 0.35, duration: 0.75 }}
                         className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-black text-white leading-tight font-display mb-5 drop-shadow-lg"
                     >
-                        Rent Farm Equipment{" "}
+                        The Centralized Service{" "}
                         <span className="text-transparent bg-clip-text bg-gradient-to-r from-green-400 to-emerald-300">
-                            Near You
+                            Platform for Farmers
                         </span>
                     </motion.h1>
 
@@ -318,10 +318,10 @@ const HomePage = () => {
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: 0.5 }}
-                        className="text-lg sm:text-xl text-gray-200 leading-relaxed mb-10 max-w-2xl mx-auto drop-shadow"
+                        className="text-lg sm:text-xl text-gray-200 leading-relaxed mb-10 max-w-3xl mx-auto drop-shadow"
                     >
-                        Connect with local farmers to rent tractors, harvesters, and tools.
-                        Save costs, increase yield — one tap away.
+                        Beyond rentals. Your all-in-one ecosystem for ML crop diagnosis, cold chain discovery, 
+                        mandi intelligence, and sustainable farming services.
                     </motion.p>
 
                     {/* CTA Buttons */}

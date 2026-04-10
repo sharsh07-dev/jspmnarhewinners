@@ -57,17 +57,16 @@ const MandiAdvisor = () => {
         let data = [];
         crops.forEach(c => {
             mandis.forEach(m => {
-                const base = Math.floor(Math.random() * (5000 - 1000) + 1000);
-                data.push({
-                    state: "Maharashtra", district: m, market: m, commodity: c, 
-                    modal_price: base, 
-                    arrival_date: format(new Date(), "yyyy-MM-dd")
-                });
-                data.push({
-                    state: "Maharashtra", district: m, market: m, commodity: c, 
-                    modal_price: base - (Math.random() * 200), 
-                    arrival_date: format(subDays(new Date(), 1), "yyyy-MM-dd")
-                });
+                let currentBase = Math.floor(Math.random() * (5000 - 1000) + 1000);
+                for (let i = 0; i <= 7; i++) {
+                    data.push({
+                        state: "Maharashtra", district: m, market: m, commodity: c, 
+                        modal_price: Math.max(500, Math.round(currentBase)), 
+                        arrival_date: format(subDays(new Date(), i), "yyyy-MM-dd")
+                    });
+                    // Simulated previous day was slightly different
+                    currentBase = currentBase - (Math.random() * 300 - 100);
+                }
             });
         });
         return data;
@@ -105,7 +104,8 @@ const MandiAdvisor = () => {
             today: todayPrice,
             tomorrow: predictedTomorrow,
             trend: trend,
-            confidence: confidence
+            confidence: confidence,
+            history: sorted.slice(0, 7).reverse() // Oldest to newest
         };
     }, [selectedCrop, selectedMandi, prices]);
 
@@ -194,11 +194,31 @@ const MandiAdvisor = () => {
     // --- CHART DATA ---
     const chartData = useMemo(() => {
         if (!activeAnalytic) return [];
-        return [
-            { day: 'Yesterday', price: activeAnalytic.yesterday },
-            { day: 'Today', price: activeAnalytic.today },
-            { day: 'Tomorrow (Predicted)', price: activeAnalytic.tomorrow },
-        ];
+        
+        const parseDateString = (dStr) => {
+            if (!dStr) return '';
+            try {
+                if (dStr.includes('/')) {
+                    const parts = dStr.split('/');
+                    if (parts.length === 3) return format(new Date(`${parts[2]}-${parts[1]}-${parts[0]}`), "MMM dd");
+                }
+                return format(new Date(dStr), "MMM dd");
+            } catch(e) {
+                return dStr;
+            }
+        };
+
+        const dataPts = activeAnalytic.history.map(h => ({
+            day: parseDateString(h.arrival_date),
+            price: Number(h.modal_price)
+        }));
+        
+        dataPts.push({
+            day: 'Tomorrow', 
+            price: activeAnalytic.tomorrow
+        });
+        
+        return dataPts;
     }, [activeAnalytic]);
 
     return (

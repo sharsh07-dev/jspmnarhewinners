@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import useAuthStore from "../store/useAuthStore";
 import { db } from "../firebase";
@@ -15,7 +16,7 @@ import {
     MdNotifications, MdAccessTime, MdShoppingCart,
     MdPhone, MdMessage, MdInbox, MdDone, MdReceipt, MdDownload, MdLightbulb,
     MdReportProblem, MdVideoCall, MdVerifiedUser, MdHistoryEdu, MdPeople, MdChat, MdCheck, MdDoubleArrow,
-    MdSmartToy
+    MdSmartToy, MdAcUnit, MdLocalFlorist
 } from "react-icons/md";
 import { generateGSTInvoice } from "../utils/invoiceGenerator";
 import DamageReportModal from "../components/DamageReportModal";
@@ -55,12 +56,14 @@ const statusBadge = {
 
 const Dashboard = () => {
     const { user, authUser } = useAuthStore();
+    const navigate = useNavigate();
     const [tab, setTab] = useState("overview");
     const [myBookings, setMyBookings] = useState([]);
     const [myEquipment, setMyEquipment] = useState([]);
     const [ownerBookings, setOwnerBookings] = useState([]);
     const [notifications, setNotifications] = useState([]);
     const [labourRequests, setLabourRequests] = useState([]);
+    const [labourCampaigns, setLabourCampaigns] = useState([]);
     const [selectedLabourToRate, setSelectedLabourToRate] = useState(null);
     const [tempRating, setTempRating] = useState(5);
     const [bookingStatusTab, setBookingStatusTab] = useState("all");
@@ -117,7 +120,17 @@ const Dashboard = () => {
             } else setNotifications([]);
         });
 
-        return () => { ubSub(); eSub(); nSub(); };
+        // Labour Campaigns
+        const lcSub = onValue(ref(db, "labour_campaigns"), (snap) => {
+            if (snap.exists()) {
+                const list = Object.keys(snap.val())
+                    .map(k => ({ id: k, ...snap.val()[k] }))
+                    .filter(c => c.farmerId === authUser.uid);
+                setLabourCampaigns(list.sort((a,b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0)));
+            }
+        });
+
+        return () => { ubSub(); eSub(); nSub(); luSub(); lcSub(); };
     }, [authUser]);
 
     const handleTypeChange = (type) => {
@@ -293,6 +306,39 @@ const Dashboard = () => {
                                                     <p className="text-[10px] md:text-xs font-bold uppercase tracking-tight opacity-70 mt-1">{s.label}</p>
                                                 </motion.div>
                                             ))}
+                                        </div>
+
+                                        <div className="space-y-4">
+                                            <h3 className="text-sm font-black text-gray-400 uppercase tracking-widest flex items-center gap-2">
+                                                <MdSmartToy className="text-green-500" /> Smart Farming Services
+                                            </h3>
+                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                                <button 
+                                                    onClick={() => navigate('/cold-chain')}
+                                                    className="bg-white p-6 rounded-[32px] border border-gray-100 shadow-sm hover:shadow-md transition-all text-left flex items-center gap-5 group"
+                                                >
+                                                    <div className="w-14 h-14 bg-blue-50 text-blue-600 rounded-2xl flex items-center justify-center text-3xl transition-transform group-hover:scale-110">
+                                                        <MdAcUnit />
+                                                    </div>
+                                                    <div>
+                                                        <h4 className="font-black text-gray-900 leading-tight">Cold Storage Locator</h4>
+                                                        <p className="text-xs text-gray-400 font-medium mt-1">Preserve your harvest. Find nearby cold chain units.</p>
+                                                    </div>
+                                                </button>
+                                                
+                                                <button 
+                                                    onClick={() => navigate('/crop-disease')}
+                                                    className="bg-white p-6 rounded-[32px] border border-gray-100 shadow-sm hover:shadow-md transition-all text-left flex items-center gap-5 group"
+                                                >
+                                                    <div className="w-14 h-14 bg-green-50 text-green-600 rounded-2xl flex items-center justify-center text-3xl transition-transform group-hover:scale-110">
+                                                        <MdLocalFlorist />
+                                                    </div>
+                                                    <div>
+                                                        <h4 className="font-black text-gray-900 leading-tight">ML Disease Scanner</h4>
+                                                        <p className="text-xs text-gray-400 font-medium mt-1">Detect crop pathology using Llama 4 Vision ML.</p>
+                                                    </div>
+                                                </button>
+                                            </div>
                                         </div>
 
                                         {/* Pending bookings on owner's equipment */}
@@ -982,71 +1028,109 @@ const Dashboard = () => {
                                                     </Link>
                                                 </div>
 
-                                                {labourRequests.length === 0 ? (
+                                                {labourCampaigns.length === 0 && labourRequests.length === 0 ? (
                                                     <div className="bg-white rounded-[32px] p-16 text-center border-2 border-dashed border-gray-100">
                                                         <p className="text-gray-400 font-bold mb-4">No active hiring requests yet.</p>
                                                         <Link to="/find-labour" className="text-yellow-600 font-black hover:underline">Start hiring local labourers →</Link>
                                                     </div>
                                                 ) : (
-                                                    <div className="grid grid-cols-1 gap-4">
-                                                        {labourRequests.map(req => (
-                                                            <div key={req.id} className="bg-white rounded-[28px] p-6 border border-gray-100 shadow-sm flex flex-col md:flex-row items-center justify-between gap-6">
-                                                                <div className="flex items-center gap-4">
-                                                                    <div className="w-14 h-14 bg-yellow-50 text-yellow-600 rounded-2xl flex items-center justify-center text-xl font-bold">
-                                                                        {req.labourerName?.[0]}
-                                                                    </div>
-                                                                    <div>
-                                                                        <h4 className="font-bold text-gray-900">{req.labourerName}</h4>
-                                                                        <div className="flex items-center gap-2 text-xs font-bold mt-0.5">
-                                                                            <span className="text-blue-600">{req.skill}</span>
-                                                                            <span className="text-gray-300">•</span>
-                                                                            <span className="text-gray-400">{req.date}</span>
+                                                    <div className="space-y-8">
+                                                        {labourCampaigns.map(camp => {
+                                                            const relatedReqs = labourRequests.filter(r => r.campaignId === camp.id).sort((a,b) => new Date(b.createdAt) - new Date(a.createdAt));
+                                                            if (relatedReqs.length === 0 && camp.confirmedCount === 0) return null;
+                                                            return (
+                                                                <div key={camp.id} className="bg-white border-2 border-yellow-100 rounded-[32px] p-2 flex flex-col shadow-sm overflow-hidden">
+                                                                    {/* Campaign Banner Header */}
+                                                                    <div className="bg-yellow-50 rounded-[24px] p-6 flex flex-col md:flex-row justify-between items-center gap-4 border border-yellow-200/50">
+                                                                        <div className="flex items-center gap-4">
+                                                                            <div className="w-14 h-14 bg-yellow-400 text-white rounded-2xl flex items-center justify-center text-3xl shadow-inner shadow-yellow-500"><MdPeople /></div>
+                                                                            <div>
+                                                                                <h3 className="font-black text-xl text-yellow-900 leading-tight">Hiring: {camp.skill === "General" ? "General Work" : camp.skill}</h3>
+                                                                                <p className="text-sm font-bold text-yellow-700/70">{format(new Date(camp.date), "MMM dd, yyyy")}</p>
+                                                                            </div>
                                                                         </div>
-                                                                    </div>
-                                                                </div>
-
-                                                                <div className="flex-1 flex justify-center gap-8">
-                                                                    <div>
-                                                                        <p className="text-[10px] text-gray-400 font-black uppercase tracking-widest text-center">Your Offer</p>
-                                                                        <p className="text-lg font-black text-gray-900 text-center">₹{req.offeredPrice}</p>
-                                                                    </div>
-                                                                    {req.counterPrice && (
-                                                                        <div className="animate-bounce-subtle">
-                                                                            <p className="text-[10px] text-orange-400 font-black uppercase tracking-widest text-center flex items-center gap-1"><MdChat /> Countered</p>
-                                                                            <p className="text-lg font-black text-orange-600 text-center">₹{req.counterPrice}</p>
+                                                                        <div className="flex gap-4">
+                                                                            <div className="text-center px-4">
+                                                                                <p className="text-[10px] font-black uppercase text-yellow-600/70 tracking-widest">Required</p>
+                                                                                <p className="text-2xl font-black text-yellow-800">{camp.requiredSlots}</p>
+                                                                            </div>
+                                                                            <div className="w-px bg-yellow-200/60" />
+                                                                            <div className="text-center px-4">
+                                                                                <p className="text-[10px] font-black uppercase text-green-600/70 tracking-widest">Confirmed</p>
+                                                                                <p className="text-2xl font-black text-green-600">{camp.confirmedCount || 0}</p>
+                                                                            </div>
+                                                                            <div className="w-px bg-yellow-200/60" />
+                                                                            <div className="text-center px-4">
+                                                                                <p className="text-[10px] font-black uppercase text-blue-600/70 tracking-widest">Pending</p>
+                                                                                <p className="text-2xl font-black text-blue-600">{relatedReqs.filter(r => r.status === 'sent' || r.status === 'waitlisted').length}</p>
+                                                                            </div>
                                                                         </div>
-                                                                    )}
-                                                                </div>
-
-                                                                <div className="flex items-center gap-3 w-full md:w-auto">
-                                                                    <div className={`px-4 py-2 rounded-xl text-xs font-black uppercase tracking-widest border-2 ${
-                                                                        req.status === 'sent' ? 'bg-blue-50 text-blue-600 border-blue-100' :
-                                                                        req.status === 'accepted' ? 'bg-green-50 text-green-600 border-green-100' :
-                                                                        req.status === 'countered' ? 'bg-orange-50 text-orange-600 border-orange-100 underline decoration-2' : 'bg-gray-50 text-gray-400 border-gray-100'
-                                                                    }`}>
-                                                                        {req.status}
                                                                     </div>
                                                                     
-                                                                    {req.status === 'countered' && (
-                                                                        <div className="flex gap-2">
-                                                                            <button onClick={async () => {
-                                                                                await update(ref(db, `labour_requests/${req.id}`), { status: 'accepted', offeredPrice: req.counterPrice, counterPrice: null });
-                                                                                toast.success("Counter offer accepted!");
-                                                                            }} className="p-2 bg-green-500 text-white rounded-lg hover:bg-green-600 shadow-lg shadow-green-100"><MdCheck /></button>
-                                                                            <button onClick={async () => {
-                                                                                await update(ref(db, `labour_requests/${req.id}`), { status: 'rejected' });
-                                                                                toast.success("Hiring request cancelled.");
-                                                                            }} className="p-2 bg-red-50 text-red-500 rounded-lg border border-red-100 hover:bg-red-100"><MdClose /></button>
-                                                                        </div>
-                                                                    )}
-                                                                    {req.status === 'accepted' && (
-                                                                        <button onClick={() => setSelectedLabourToRate(req)} className="flex items-center gap-2 px-4 py-2 bg-gray-900 text-white text-xs font-black rounded-xl hover:bg-black transition shadow-lg shadow-gray-200">
-                                                                            <MdDone /> Finish & Rate
-                                                                        </button>
-                                                                    )}
+                                                                    <div className="px-4 py-4 space-y-3">
+                                                                        {relatedReqs.map(req => (
+                                                                            <div key={req.id} className="bg-gray-50 rounded-[20px] p-5 flex flex-col md:flex-row items-center justify-between gap-6 border border-gray-100 hover:border-yellow-200 transition">
+                                                                                <div className="flex items-center gap-4 w-full md:w-auto">
+                                                                                    <div className="w-12 h-12 bg-white text-gray-400 rounded-xl flex items-center justify-center font-black shadow-sm">
+                                                                                        {req.labourerName?.[0]}
+                                                                                    </div>
+                                                                                    <div className="flex-1">
+                                                                                        <h4 className="font-bold text-gray-900">{req.labourerName}</h4>
+                                                                                        <div className={`px-2 py-0.5 mt-1 inline-flex rounded-md text-[10px] font-black uppercase tracking-widest border ${
+                                                                                            req.status === 'sent' ? 'bg-blue-50 text-blue-600 border-blue-100' :
+                                                                                            req.status === 'accepted' ? 'bg-green-50 text-green-600 border-green-100' :
+                                                                                            req.status === 'waitlisted' ? 'bg-amber-50 text-amber-600 border-amber-100' :
+                                                                                            req.status === 'countered' ? 'bg-orange-50 text-orange-600 border-orange-100 highlight' : 'bg-gray-100 text-gray-400 border-gray-200'
+                                                                                        }`}>
+                                                                                            {req.status === 'accepted' ? '✅ Hired (Slot Filled)' : req.status === 'waitlisted' ? '⏳ Waitlisted' : req.status}
+                                                                                        </div>
+                                                                                    </div>
+                                                                                </div>
+
+                                                                                <div className="flex-1 flex justify-center gap-8 w-full md:w-auto">
+                                                                                    <div>
+                                                                                        <p className="text-[10px] text-gray-400 font-black uppercase tracking-widest text-center">Your Offer</p>
+                                                                                        <p className="text-lg font-black text-gray-900 text-center flex items-center gap-1 justify-center"><MdAttachMoney className="text-gray-400 text-sm"/>{req.offeredPrice}</p>
+                                                                                    </div>
+                                                                                    {req.counterPrice && (
+                                                                                        <div className="animate-bounce-subtle">
+                                                                                            <p className="text-[10px] text-orange-400 font-black uppercase tracking-widest text-center flex items-center gap-1 justify-center"><MdChat /> Countered</p>
+                                                                                            <p className="text-lg font-black text-orange-600 text-center">₹{req.counterPrice}</p>
+                                                                                        </div>
+                                                                                    )}
+                                                                                </div>
+
+                                                                                <div className="flex items-center gap-3 w-full md:w-auto mt-2 md:mt-0 justify-end">
+                                                                                    {req.status === 'countered' && (
+                                                                                        <div className="flex gap-2 w-full md:w-auto">
+                                                                                            <button onClick={async () => {
+                                                                                                await update(ref(db, `labour_requests/${req.id}`), { status: 'accepted', offeredPrice: req.counterPrice, counterPrice: null });
+                                                                                                toast.success("Counter offer accepted!");
+                                                                                            }} className="flex-1 md:flex-none p-3 px-5 bg-green-500 text-white rounded-xl font-bold hover:bg-green-600 shadow-lg shadow-green-100 text-xs">Accept</button>
+                                                                                            <button onClick={async () => {
+                                                                                                await update(ref(db, `labour_requests/${req.id}`), { status: 'rejected' });
+                                                                                                toast.success("Hiring request cancelled.");
+                                                                                            }} className="flex-1 md:flex-none p-3 px-5 bg-red-50 text-red-500 rounded-xl border border-red-100 font-bold hover:bg-red-100 text-xs">Decline</button>
+                                                                                        </div>
+                                                                                    )}
+                                                                                    {req.status === 'accepted' && (
+                                                                                        <button onClick={() => setSelectedLabourToRate(req)} className="w-full md:w-auto px-5 py-3 bg-gray-900 text-white text-[10px] uppercase tracking-widest font-black rounded-xl hover:bg-black transition shadow-lg shadow-gray-200">
+                                                                                            Finish & Rate
+                                                                                        </button>
+                                                                                    )}
+                                                                                    {req.status === 'sent' && (
+                                                                                        <button onClick={async () => {
+                                                                                             await update(ref(db, `labour_requests/${req.id}`), { status: 'cancelled' });
+                                                                                             toast.success("Removed from Queue");
+                                                                                        }} className="text-[10px] uppercase font-bold text-red-400 hover:text-red-500">Revoke</button>
+                                                                                    )}
+                                                                                </div>
+                                                                            </div>
+                                                                        ))}
+                                                                    </div>
                                                                 </div>
-                                                            </div>
-                                                        ))}
+                                                            );
+                                                        })}
                                                     </div>
                                                 )}
                                             </div>
