@@ -4,7 +4,7 @@ import { motion } from "framer-motion";
 import useAuthStore from "../store/useAuthStore";
 import { 
     MdDashboard, MdSearch, MdPsychology, MdSwapHorizontalCircle, 
-    MdTrendingUp, MdGavel, MdAccountBalance, MdHelpCenter,
+    MdTrendingUp, MdGavel, MdAccountBalance, MdHelpCenter, MdPeople,
     MdChevronRight, MdMenuOpen, MdKeyboardArrowLeft, MdKeyboardArrowRight
 } from "react-icons/md";
 import useUIStore from "../store/useUIStore";
@@ -52,6 +52,7 @@ const Sidebar = () => {
         { to: "/ai-recommendations", icon: <MdPsychology />, label: "AI Advisor" },
         { to: "/pesticide-exchange", icon: <MdSwapHorizontalCircle />, label: "Pesticide Exchange" },
         { to: "/mandi-prices", icon: <MdTrendingUp />, label: "Mandi Prices" },
+        { to: "/find-labour", icon: <MdPeople />, label: "Find Labour", badge: "NEW" },
     ];
 
     const adminLinks = [
@@ -59,14 +60,10 @@ const Sidebar = () => {
         { to: "/dashboard", icon: <MdTrendingUp />, label: "Platform Pulse" },
     ];
 
-    const mukadamLinks = [
-        { to: "/mukadam", icon: <MdDashboard />, label: "Mukadam Dash" },
-        { to: "/equipment", icon: <MdSearch />, label: "Labor Market" },
-    ];
 
     const laborLinks = [
         { to: "/labour", icon: <MdDashboard />, label: "My Profile" },
-        { to: "/dashboard", icon: <MdSearch />, label: "Find Work" },
+        { to: "/labour/work", icon: <MdSearch />, label: "Find Work", badge: "NEW" },
     ];
 
     const auditLinks = [
@@ -76,15 +73,15 @@ const Sidebar = () => {
     const roleLinks = {
         farmer: farmerLinks,
         admin: adminLinks,
-        mukadam: mukadamLinks,
         labour: laborLinks,
         audit: auditLinks
     };
 
-    const links = roleLinks[user.role] || farmerLinks;
+    const role = user.role?.toLowerCase();
+    const links = roleLinks[role] || [];
 
     return (
-        <aside className={`fixed left-0 top-[68px] bottom-0 ${isCollapsed ? "w-16" : "w-56"} bg-white border-r border-gray-100 hidden lg:flex flex-col p-3 z-40 transition-all duration-300 ease-in-out`}>
+        <aside className={`fixed left-0 top-[68px] bottom-0 ${isCollapsed ? "w-16" : "w-56"} bg-white border-r border-gray-100 hidden md:flex flex-col p-3 z-40 transition-all duration-300 ease-in-out`}>
             {/* Collapse Toggle */}
             <button 
                 onClick={toggleSidebar}

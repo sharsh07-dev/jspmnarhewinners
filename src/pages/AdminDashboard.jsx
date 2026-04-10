@@ -27,7 +27,7 @@ const AdminDashboard = () => {
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        if (!user || user.role !== "admin") return;
+        if (!user || user.role?.toLowerCase() !== "admin") return;
 
         // Listen to Bookings for Financials
         const bookingsRef = ref(db, "bookings");
@@ -100,7 +100,7 @@ const AdminDashboard = () => {
         } catch (err) { toast.error("Processing failed"); }
     };
 
-    if (user?.role !== "admin") return <Navigate to="/" replace />;
+    if (user?.role?.toLowerCase() !== "admin") return <Navigate to="/" replace />;
 
     return (
         <div className="min-h-screen bg-gray-50 pt-20 pb-10 px-4 sm:px-6 lg:px-8">

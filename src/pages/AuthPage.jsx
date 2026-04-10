@@ -85,8 +85,15 @@ const AuthPage = () => {
             if (mode === "login") {
                 const creds = await signInWithEmailAndPassword(auth, email, password);
                 const snap = await get(ref(db, `users/${creds.user.uid}`));
-                if (snap.exists() && snap.val().role) {
-                    userRole = snap.val().role;
+                if (snap.exists()) {
+                    const dbRole = snap.val().role?.toLowerCase();
+                    const selectedRole = role.toLowerCase();
+                    if (dbRole && dbRole !== selectedRole) {
+                        toast.error(`Access Denied: This account is registered as ${dbRole}. Please select the ${dbRole} portal.`, { icon: "🚫" });
+                        setLoading(false);
+                        return;
+                    }
+                    userRole = dbRole || userRole;
                 }
                 processSuccessfulLogin(creds.user.uid, userRole, email, snap.exists() ? snap.val().name : "User", password);
             } else {
@@ -135,7 +142,14 @@ const AuthPage = () => {
                 let currentRole = role;
                 let cName = name || "Farmer";
                 if (snap.exists()) {
-                    if (snap.val().role) currentRole = snap.val().role;
+                    const dbRole = snap.val().role?.toLowerCase();
+                    const selectedRole = role.toLowerCase();
+                    if (dbRole && dbRole !== selectedRole) {
+                        toast.error(`Account Conflict: This mobile number belongs to a ${dbRole}.`, { icon: "⚠️" });
+                        setLoading(false);
+                        return;
+                    }
+                    currentRole = dbRole || currentRole;
                     if (snap.val().name) cName = snap.val().name;
                 }
                 processSuccessfulLogin(creds.user.uid, currentRole, phone, cName, trickPass);
@@ -190,7 +204,6 @@ const AuthPage = () => {
                 {[
                     { id: "farmer", icon: "🧑‍🌾", label: "Farmer", color: "green" },
                     { id: "admin", icon: "🛡️", label: "Admin", color: "red" },
-                    { id: "mukadam", icon: "👷", label: "Mukadam", color: "orange" },
                     { id: "labour", icon: "🛠️", label: "Labour", color: "yellow" },
                     { id: "audit", icon: "🏦", label: "Audit", color: "indigo" }
                 ].map(({ id, icon, label, color }) => (
@@ -233,11 +246,19 @@ const AuthPage = () => {
 
             <div className="flex-1 flex items-center justify-center p-6 sm:p-10 bg-gray-50">
                 <div className="w-full max-w-md">
-                    {/* Header Tabs if not on Saved Device Mode */}
+                    {/* Global Mode Toggle (Login vs Signup) */}
                     {authMethod !== "saved" && (
-                        <div className="flex bg-gray-200 rounded-2xl p-1 mb-6">
-                            <button onClick={() => setAuthMethod("phone")} className={`flex-1 py-2.5 text-sm font-bold rounded-xl transition-all duration-200 ${authMethod === "phone" ? "bg-white text-gray-900 shadow-sm" : "text-gray-500 hover:text-gray-700"}`}>📱 Phone / OTP</button>
-                            <button onClick={() => setAuthMethod("email")} className={`flex-1 py-2.5 text-sm font-bold rounded-xl transition-all duration-200 ${authMethod === "email" ? "bg-white text-gray-900 shadow-sm" : "text-gray-500 hover:text-gray-700"}`}>✉️ Email Log In</button>
+                        <div className="flex bg-gray-200 rounded-2xl p-1 mb-4">
+                            <button onClick={() => { setMode("login"); setOtpStep(1); }} className={`flex-1 py-2.5 text-sm font-bold rounded-xl transition-all duration-200 ${mode === "login" ? "bg-white text-gray-900 shadow-md" : "text-gray-500 hover:text-gray-700"}`}>Existing User (Sign In)</button>
+                            <button onClick={() => { setMode("signup"); setOtpStep(1); }} className={`flex-1 py-2.5 text-sm font-bold rounded-xl transition-all duration-200 ${mode === "signup" ? "bg-white text-gray-900 shadow-md" : "text-gray-500 hover:text-gray-700"}`}>New Account (Join Us)</button>
+                        </div>
+                    )}
+
+                    {/* Auth Method Toggle (Phone vs Email) */}
+                    {authMethod !== "saved" && (
+                        <div className="flex justify-center gap-6 mb-6">
+                            <button onClick={() => setAuthMethod("phone")} className={`text-xs font-bold uppercase tracking-widest pb-1 border-b-2 transition-all ${authMethod === 'phone' ? 'border-green-600 text-green-700' : 'border-transparent text-gray-400'}`}>Mobile Number</button>
+                            <button onClick={() => setAuthMethod("email")} className={`text-xs font-bold uppercase tracking-widest pb-1 border-b-2 transition-all ${authMethod === 'email' ? 'border-green-600 text-green-700' : 'border-transparent text-gray-400'}`}>Email Address</button>
                         </div>
                     )}
 
@@ -266,13 +287,19 @@ const AuthPage = () => {
                         </motion.div>
                     ) : authMethod === "phone" ? (
                         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-4">
-                            <div>
-                                <h1 className="text-3xl font-black text-gray-900 font-display mb-1">Enter your Mobile Number</h1>
-                                <p className="text-gray-500 text-sm">We'll send you an OTP to quickly log in securely.</p>
-                            </div>
-                            {renderRoleSelector()}
-                            <form onSubmit={otpStep === 1 ? handleSendOTP : handleVerifyOTP} className="space-y-4">
-                                {otpStep === 1 ? (
+                             <div>
+                                 <h1 className="text-3xl font-black text-gray-900 font-display mb-1">{mode === 'login' ? 'Welcome Back!' : 'Start Your Journey'}</h1>
+                                 <p className="text-gray-500 text-sm">{mode === 'login' ? 'Sign in with your mobile number.' : 'Register to access smart farm modules.'}</p>
+                             </div>
+                             {renderRoleSelector()}
+                             <form onSubmit={otpStep === 1 ? handleSendOTP : handleVerifyOTP} className="space-y-4">
+                                 {otpStep === 1 && mode === "signup" && (
+                                     <div className="relative animate-in slide-in-from-top-2">
+                                         <MdPerson className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 h-5 w-5" />
+                                         <input required value={name} onChange={(e) => setName(e.target.value)} type="text" placeholder="Your Full Name" className="w-full bg-white border border-gray-200 text-gray-900 text-sm rounded-2xl focus:ring-green-500 focus:border-green-500 block p-3.5 pl-11 shadow-sm font-semibold" />
+                                     </div>
+                                 )}
+                                 {otpStep === 1 ? (
                                     <div className="relative">
                                         <div className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-600 font-bold border-r pr-2 flex items-center gap-1">
                                             <span>🇮🇳</span> +91
@@ -297,11 +324,7 @@ const AuthPage = () => {
                         </motion.div>
                     ) : (
                         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-4">
-                             <div className="flex bg-gray-100/50 rounded-xl p-1 mb-4 border border-gray-100">
-                                <button onClick={() => setMode("login")} className={`flex-1 py-1.5 text-xs font-bold rounded-lg transition-all ${mode === "login" ? "bg-white text-gray-900 shadow-sm" : "text-gray-400"}`}>Existing User</button>
-                                <button onClick={() => setMode("signup")} className={`flex-1 py-1.5 text-xs font-bold rounded-lg transition-all ${mode === "signup" ? "bg-white text-gray-900 shadow-sm" : "text-gray-400"}`}>New Account</button>
-                            </div>
-                            {renderRoleSelector()}
+                             {renderRoleSelector()}
                             <form onSubmit={handleEmailSubmit} className="space-y-4">
                                 {mode === "signup" && (
                                     <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} className="space-y-4 overflow-hidden">

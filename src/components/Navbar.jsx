@@ -34,10 +34,10 @@ const Navbar = () => {
 
     const getDashboardLink = () => {
         if (!user) return "/auth";
-        if (user.role === "admin") return "/admin";
-        if (user.role === "mukadam") return "/mukadam";
-        if (user.role === "labour") return "/labour";
-        if (user.role === "audit") return "/audit";
+        const role = user.role?.toLowerCase();
+        if (role === "admin") return "/admin";
+        if (role === "labour") return "/labour";
+        if (role === "audit") return "/audit";
         return "/dashboard";
     };
 
