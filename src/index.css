@@ -18,6 +18,20 @@
   body {
     @apply bg-gray-50 text-gray-900;
     font-family: 'Inter', sans-serif;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  /* Safe area padding for notches and home indicators */
+  .pb-safe {
+    padding-bottom: env(safe-area-inset-bottom, 20px);
+  }
+  .pt-safe {
+    padding-top: env(safe-area-inset-top, 0px);
+  }
+
+  /* Minimum touch target */
+  button, a {
+    @apply active:scale-[0.98] transition-transform duration-200;
   }
 
   h1,

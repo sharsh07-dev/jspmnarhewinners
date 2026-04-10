@@ -5,7 +5,8 @@ import useAuthStore from "../store/useAuthStore";
 import { 
     MdDashboard, MdSearch, MdPsychology, MdSwapHorizontalCircle, 
     MdTrendingUp, MdGavel, MdAccountBalance, MdHelpCenter, MdPeople,
-    MdChevronRight, MdMenuOpen, MdKeyboardArrowLeft, MdKeyboardArrowRight
+    MdChevronRight, MdMenuOpen, MdKeyboardArrowLeft, MdKeyboardArrowRight,
+    MdSmartToy, MdSensors
 } from "react-icons/md";
 import useUIStore from "../store/useUIStore";
 
@@ -48,8 +49,10 @@ const Sidebar = () => {
     const farmerLinks = [
         { to: "/dashboard", icon: <MdDashboard />, label: "Dashboard" },
         { to: "/equipment", icon: <MdSearch />, label: "Find Equipment" },
-        { to: "/schemes", icon: <MdAccountBalance />, label: "Govt Schemes", badge: "NEW" },
+        { to: "/schemes", icon: <MdAccountBalance />, label: "Govt Schemes" },
         { to: "/ai-recommendations", icon: <MdPsychology />, label: "AI Advisor" },
+        { to: "/mandi-advisor", icon: <MdSmartToy />, label: "Mandi Bot", badge: "HOT" },
+        { to: "/farm-monitoring", icon: <MdSensors />, label: "Farm Monitor" },
         { to: "/pesticide-exchange", icon: <MdSwapHorizontalCircle />, label: "Pesticide Exchange" },
         { to: "/mandi-prices", icon: <MdTrendingUp />, label: "Mandi Prices" },
         { to: "/find-labour", icon: <MdPeople />, label: "Find Labour", badge: "NEW" },
@@ -81,7 +84,9 @@ const Sidebar = () => {
     const links = roleLinks[role] || [];
 
     return (
-        <aside className={`fixed left-0 top-[68px] bottom-0 ${isCollapsed ? "w-16" : "w-56"} bg-white border-r border-gray-100 hidden md:flex flex-col p-3 z-40 transition-all duration-300 ease-in-out`}>
+        <>
+        {/* Desktop Sidebar */}
+        <aside className={`fixed left-0 top-[68px] bottom-0 ${isCollapsed ? "w-16" : "w-56"} bg-white border-r border-gray-100 hidden md:flex flex-col p-3 z-40 transition-all duration-300 ease-in-out shadow-sm`}>
             {/* Collapse Toggle */}
             <button 
                 onClick={toggleSidebar}
@@ -121,6 +126,24 @@ const Sidebar = () => {
                 </div>
             </div>
         </aside>
+
+        {/* Mobile Bottom Navigation (Native App Feel) */}
+        <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-white/80 backdrop-blur-xl border-t border-gray-100 z-50 flex justify-around items-center px-2 pt-2 pb-[env(safe-area-inset-bottom,20px)] shadow-[0_-4px_25px_rgba(0,0,0,0.05)] pb-safe rounded-t-[20px]">
+            {links.slice(0, 5).map((link, idx) => {
+                const isActive = location.pathname === link.to;
+                return (
+                    <Link key={idx} to={link.to} className={`flex flex-col items-center justify-center gap-1 p-2 w-full transition-all duration-200 min-h-[44px] ${isActive ? "text-green-600" : "text-gray-400 hover:text-gray-600"}`}>
+                        <div className={`text-2xl transition-transform duration-200 ${isActive ? "scale-110 drop-shadow-sm" : ""}`}>
+                            {link.icon}
+                        </div>
+                        <span className={`text-[10px] font-bold tracking-tight ${isActive ? "text-green-600" : "text-gray-500"}`}>
+                            {link.label.split(" ")[0]}
+                        </span>
+                    </Link>
+                );
+            })}
+        </nav>
+        </>
     );
 };
 

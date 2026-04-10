@@ -26,8 +26,10 @@ import AuthPage from "./pages/AuthPage";
 import AIRecommendations from "./pages/AIRecommendations";
 import PesticideExchange from "./pages/PesticideExchange";
 import LiveMandiPrices from "./pages/LiveMandiPrices";
+import MandiAdvisor from "./pages/MandiAdvisor";
 import SchemeDiscovery from "./pages/SchemeDiscovery";
 import LabourDiscovery from "./pages/LabourDiscovery";
+import FarmMonitoring from "./pages/FarmMonitoring";
 import FarmerChatbot from "./components/FarmerChatbot";
 
 const AppContent = () => {
@@ -74,7 +76,7 @@ const AppContent = () => {
         <Navbar />
         <Sidebar />
         {(!user || user?.role?.toLowerCase() === "farmer") && <FarmerChatbot />}
-        <main className={`flex-grow transition-all duration-300 ${user ? (isSidebarCollapsed ? "md:pl-16" : "md:pl-56") : ""} ${(!user && isHome) ? "" : "pt-[68px]"}`}>
+        <main className={`flex-grow transition-all duration-300 w-full overflow-x-hidden ${user ? (isSidebarCollapsed ? "md:pl-16" : "md:pl-56") + " pb-24 md:pb-0" : ""} ${(!user && isHome) ? "" : "pt-[68px]"}`}>
           <Routes>
             <Route path="/" element={!user ? <HomePage /> : (user.role?.toLowerCase() === 'farmer' ? <Navigate to="/equipment" replace /> : <Navigate to={`/${user.role?.toLowerCase()}`} replace />)} />
             <Route path="/equipment" element={(!user || user?.role?.toLowerCase() === "farmer") ? <DiscoveryWizard /> : <Navigate to="/" replace />} />
@@ -84,7 +86,9 @@ const AppContent = () => {
             <Route path="/ai-recommendations" element={user?.role?.toLowerCase() === "farmer" ? <AIRecommendations /> : <Navigate to="/" replace />} />
             <Route path="/pesticide-exchange" element={user?.role?.toLowerCase() === "farmer" ? <PesticideExchange /> : <Navigate to="/" replace />} />
             <Route path="/mandi-prices" element={user?.role?.toLowerCase() === "farmer" ? <LiveMandiPrices /> : <Navigate to="/" replace />} />
+            <Route path="/mandi-advisor" element={user?.role?.toLowerCase() === "farmer" ? <MandiAdvisor /> : <Navigate to="/" replace />} />
             <Route path="/schemes" element={user?.role?.toLowerCase() === "farmer" ? <SchemeDiscovery /> : <Navigate to="/" replace />} />
+            <Route path="/farm-monitoring" element={user?.role?.toLowerCase() === "farmer" ? <FarmMonitoring /> : <Navigate to="/" replace />} />
             <Route path="/find-labour" element={user?.role?.toLowerCase() === "farmer" ? <LabourDiscovery /> : <Navigate to="/" replace />} />
             <Route path="/admin" element={user?.role?.toLowerCase() === "admin" ? <AdminDashboard /> : <Navigate to="/" replace />} />
             <Route path="/labour" element={user?.role?.toLowerCase() === "labour" ? <LabourDashboard /> : <Navigate to="/" replace />} />

@@ -14,10 +14,12 @@ import {
     MdCheckCircle, MdHourglassEmpty, MdCancel,
     MdNotifications, MdAccessTime, MdShoppingCart,
     MdPhone, MdMessage, MdInbox, MdDone, MdReceipt, MdDownload, MdLightbulb,
-    MdReportProblem, MdVideoCall, MdVerifiedUser, MdHistoryEdu, MdPeople, MdChat, MdCheck, MdDoubleArrow
+    MdReportProblem, MdVideoCall, MdVerifiedUser, MdHistoryEdu, MdPeople, MdChat, MdCheck, MdDoubleArrow,
+    MdSmartToy
 } from "react-icons/md";
 import { generateGSTInvoice } from "../utils/invoiceGenerator";
 import DamageReportModal from "../components/DamageReportModal";
+import MandiBotWidget from "../components/MandiBotWidget";
 import { FaTractor } from "react-icons/fa";
 import { format, isAfter, isBefore, parseISO } from "date-fns";
 
@@ -336,6 +338,44 @@ const Dashboard = () => {
                                             </div>
                                         )}
 
+                                        {/* Quick Access widgets */}
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                            {/* Farm Monitoring Quick Access */}
+                                            <div className="bg-gradient-to-br from-blue-900 to-indigo-900 rounded-2xl p-5 border border-indigo-800 shadow-sm relative overflow-hidden group">
+                                                <div className="absolute top-0 right-0 w-32 h-32 blur-[60px] rounded-full bg-blue-500/20 group-hover:bg-blue-400/30 transition-colors" />
+                                                <div className="relative z-10 flex flex-col h-full">
+                                                    <div className="flex justify-between items-start mb-4">
+                                                        <div className="w-10 h-10 bg-white/10 rounded-xl flex items-center justify-center text-blue-300">
+                                                            <MdSmartToy size={20} />
+                                                        </div>
+                                                        <span className="text-[10px] font-black text-blue-300 uppercase tracking-widest px-2 py-0.5 bg-white/5 rounded-full border border-white/10">Active</span>
+                                                    </div>
+                                                    <h3 className="font-bold text-white text-lg">Farm Monitoring</h3>
+                                                    <p className="text-blue-200/70 text-xs font-medium mt-1 mb-4">Control irrigation & view soil moisture in real-time from IoT sensors.</p>
+                                                    <a href="/farm-monitoring" className="mt-auto inline-flex items-center gap-2 text-xs font-bold text-white uppercase tracking-widest hover:text-blue-300 transition-colors">
+                                                        Open Dashboard <MdDoubleArrow />
+                                                    </a>
+                                                </div>
+                                            </div>
+
+                                            {/* Mandi bot Quick Access */}
+                                            <div className="bg-gradient-to-br from-green-900 to-emerald-900 rounded-2xl p-5 border border-emerald-800 shadow-sm relative overflow-hidden group">
+                                                <div className="absolute top-0 right-0 w-32 h-32 blur-[60px] rounded-full bg-emerald-500/20 group-hover:bg-emerald-400/30 transition-colors" />
+                                                <div className="relative z-10 flex flex-col h-full">
+                                                    <div className="flex justify-between items-start mb-4">
+                                                        <div className="w-10 h-10 bg-white/10 rounded-xl flex items-center justify-center text-emerald-300">
+                                                            <MdSmartToy size={20} />
+                                                        </div>
+                                                    </div>
+                                                    <h3 className="font-bold text-white text-lg">Mandi AI Advisor</h3>
+                                                    <p className="text-emerald-200/70 text-xs font-medium mt-1 mb-4">Get smart crop price predictions and market analysis directly.</p>
+                                                    <a href="/mandi-advisor" className="mt-auto inline-flex items-center gap-2 text-xs font-bold text-white uppercase tracking-widest hover:text-emerald-300 transition-colors">
+                                                        Chat Now <MdDoubleArrow />
+                                                    </a>
+                                                </div>
+                                            </div>
+                                        </div>
+
                                         {/* Recent bookings */}
                                         <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
                                             <div className="flex items-center justify-between mb-4">
@@ -363,6 +403,7 @@ const Dashboard = () => {
                                                 </div>
                                             )}
                                         </div>
+
                                     </div>
                                 )}
 
@@ -393,58 +434,78 @@ const Dashboard = () => {
                                         {filteredBookings.length === 0 ? (
                                             <div className="text-center py-16">
                                                 <span className="text-5xl block mb-3">📅</span>
-                                                <p className="text-gray-400">No {bookingStatusTab !== "all" ? bookingStatusTab : ""} bookings found</p>
+                                                <p className="text-gray-400 font-bold">No {bookingStatusTab !== "all" ? bookingStatusTab : ""} bookings found</p>
                                             </div>
                                         ) : (
                                             <div className="space-y-4">
                                                 {filteredBookings.map(b => (
                                                     <motion.div
                                                         key={b.id}
-                                                        initial={{ opacity: 0, y: 10 }}
-                                                        animate={{ opacity: 1, y: 0 }}
-                                                        className={`border rounded-2xl p-5 transition-all ${b._category === "ongoing"
-                                                            ? "border-green-300 bg-green-50"
-                                                            : "border-gray-100 hover:border-green-200"
-                                                            }`}
+                                                        initial={{ opacity: 0, scale: 0.95 }}
+                                                        animate={{ opacity: 1, scale: 1 }}
+                                                        className={`border rounded-2xl p-4 md:p-6 transition-all shadow-sm active:scale-[0.98] ${
+                                                            b._category === "ongoing" 
+                                                            ? "border-green-300 bg-green-50/50 shadow-green-100" 
+                                                            : "border-gray-100 bg-white hover:border-green-200"
+                                                        }`}
                                                     >
-                                                        <div className="flex flex-col sm:flex-row justify-between gap-4">
-                                                            <div className="flex items-start gap-3">
-                                                                <div className={`w-10 h-10 rounded-xl flex items-center justify-center text-xl mt-0.5 ${b._category === "ongoing" ? "bg-green-200" : "bg-gray-100"
+                                                        <div className="flex flex-col gap-4">
+                                                            {/* Card Top: Info & Status */}
+                                                            <div className="flex justify-between items-start gap-3">
+                                                                <div className="flex items-center gap-3">
+                                                                    <div className={`w-12 h-12 rounded-2xl flex items-center justify-center text-2xl shadow-sm ${
+                                                                        b._category === "ongoing" ? "bg-green-100 text-green-600" : "bg-gray-50 text-gray-400"
                                                                     }`}>
-                                                                    🚜
+                                                                        🚜
+                                                                    </div>
+                                                                    <div>
+                                                                        <h4 className="font-black text-gray-900 leading-tight">{b.equipmentName}</h4>
+                                                                        <div className="flex items-center gap-2 mt-1">
+                                                                            <span className={`text-[10px] font-black uppercase px-2 py-0.5 rounded-full border ${statusBadge[b._category] || statusBadge.pending}`}>
+                                                                                {b._category}
+                                                                            </span>
+                                                                            <span className={`text-[10px] font-black uppercase px-2 py-0.5 rounded-full border ${statusBadge[b.status] || statusBadge.pending}`}>
+                                                                                {b.status}
+                                                                            </span>
+                                                                        </div>
+                                                                    </div>
                                                                 </div>
-                                                                <div>
-                                                                    <p className="font-bold text-gray-900">{b.equipmentName}</p>
-                                                                    <p className="text-sm text-gray-500 mt-0.5">
-                                                                        {b.startTime
-                                                                            ? `${format(new Date(b.startTime), "MMM dd, yyyy • HH:mm")}${b.endTime ? ` – ${format(new Date(b.endTime), "HH:mm")}` : ""}`
-                                                                            : b.date
-                                                                        }
-                                                                    </p>
-                                                                    <p className="text-sm text-gray-500">{b.duration ? `${b.duration}h · ` : ""}<span className="font-bold text-green-700">₹{b.totalPrice}</span></p>
-                                                                    {b._category === "ongoing" && (
-                                                                        <span className="inline-flex items-center gap-1 mt-1.5 text-xs font-bold text-green-700 bg-green-100 px-2 py-0.5 rounded-full">
-                                                                            <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" /> Live Now
-                                                                        </span>
-                                                                    )}
+                                                                <div className="text-right">
+                                                                    <p className="text-lg font-black text-gray-900 leading-none">₹{b.totalPrice}</p>
+                                                                    <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mt-1">{b.duration} HR</p>
                                                                 </div>
                                                             </div>
-                                                            <div className="flex items-start gap-2 flex-wrap">
-                                                                <span className={`text-xs font-bold px-2.5 py-1 rounded-full border capitalize ${statusBadge[b._category] || statusBadge.pending}`}>
-                                                                    {b._category}
-                                                                </span>
-                                                                <span className={`text-xs font-bold px-2.5 py-1 rounded-full border capitalize ${statusBadge[b.status] || statusBadge.pending}`}>
-                                                                    {b.status}
-                                                                </span>
-                                                                {(b.status === "pending" || b._category === "upcoming") && (
+
+                                                            {/* Card Middle: Time Details */}
+                                                            <div className="bg-gray-50/50 rounded-xl p-3 flex flex-col gap-2 border border-gray-100">
+                                                                <div className="flex items-center gap-2 text-xs font-bold text-gray-600">
+                                                                    <MdAccessTime className="text-gray-400" />
+                                                                    {b.startTime 
+                                                                        ? `${format(new Date(b.startTime), "MMM dd, yyyy • HH:mm")}${b.endTime ? ` – ${format(new Date(b.endTime), "HH:mm")}` : ""}`
+                                                                        : b.date
+                                                                    }
+                                                                </div>
+                                                                {b._category === "ongoing" && (
+                                                                    <div className="flex items-center gap-1.5 text-[10px] font-bold text-green-600">
+                                                                        <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" /> LIVE SESSION
+                                                                    </div>
+                                                                )}
+                                                            </div>
+
+                                                            {/* Card Bottom: Actions */}
+                                                            {(b.status === "pending" || b._category === "upcoming") && (
+                                                                <div className="flex gap-2">
                                                                     <button
                                                                         onClick={() => handleCancelBooking(b.id, b.equipmentName)}
-                                                                        className="px-3 py-1 text-xs text-red-600 border border-red-200 rounded-lg font-semibold hover:bg-red-50 transition"
+                                                                        className="flex-1 py-3 text-xs font-black uppercase tracking-widest text-red-600 border-2 border-red-50 rounded-xl hover:bg-red-50 active:scale-95 transition-all"
                                                                     >
                                                                         Cancel
                                                                     </button>
-                                                                )}
-                                                            </div>
+                                                                    <button className="flex-[2] py-3 text-xs font-black uppercase tracking-widest bg-gray-900 text-white rounded-xl shadow-lg active:scale-95 transition-all">
+                                                                        View Details
+                                                                    </button>
+                                                                </div>
+                                                            )}
                                                         </div>
                                                     </motion.div>
                                                 ))}
@@ -479,80 +540,72 @@ const Dashboard = () => {
                                                 {ownerBookings
                                                     .filter(b => bookingStatusTab === "all" || b.status === bookingStatusTab)
                                                     .map(b => (
-                                                        <div key={b.id} className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+                                                        <div key={b.id} className="bg-white rounded-[28px] border border-gray-100 shadow-sm overflow-hidden active:scale-[0.99] transition-transform">
                                                             {/* Status bar */}
-                                                            <div className={`h-1.5 w-full ${b.status === "pending" ? "bg-yellow-400" :
+                                                            <div className={`h-1.5 w-full ${
+                                                                b.status === "pending" ? "bg-amber-400" :
                                                                 b.status === "upcoming" ? "bg-blue-500" :
-                                                                    b.status === "confirmed" ? "bg-indigo-500" :
-                                                                        b.status === "completed" ? "bg-purple-500" :
-                                                                            "bg-red-400"
-                                                                }`} />
-                                                            <div className="p-5">
-                                                                {/* Header */}
-                                                                <div className="flex items-start justify-between mb-4">
-                                                                    <div>
-                                                                        <h3 className="font-bold text-gray-900 text-base">{b.equipmentName}</h3>
-                                                                        <p className="text-sm text-gray-500 mt-0.5">
-                                                                            {b.startTime
-                                                                                ? `${format(new Date(b.startTime), "MMM dd, yyyy • HH:mm")}${b.endTime ? ` – ${format(new Date(b.endTime), "HH:mm")}` : ""}`
-                                                                                : b.date
-                                                                            } · {b.duration}h
-                                                                        </p>
+                                                                b.status === "confirmed" ? "bg-indigo-500" :
+                                                                b.status === "completed" ? "bg-purple-500" : "bg-red-400"
+                                                            }`} />
+                                                            <div className="p-6">
+                                                                {/* Header: Equipment & Booker */}
+                                                                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-5">
+                                                                    <div className="flex items-center gap-4">
+                                                                        <div className="w-14 h-14 bg-gray-50 rounded-2xl flex items-center justify-center text-3xl shadow-sm">🚜</div>
+                                                                        <div>
+                                                                            <h3 className="font-black text-gray-900 text-lg leading-tight">{b.equipmentName}</h3>
+                                                                            <p className="text-xs font-bold text-gray-400 mt-1 uppercase tracking-widest flex items-center gap-1.5">
+                                                                                <MdPerson className="text-gray-300" /> Booked by {b.userName || "Farmer"}
+                                                                            </p>
+                                                                        </div>
                                                                     </div>
-                                                                    <span className={`text-xs font-bold px-3 py-1 rounded-full border capitalize ${statusBadge[b.status] || statusBadge.pending}`}>
-                                                                        {b.status}
-                                                                    </span>
+                                                                    <div className="flex items-center gap-2">
+                                                                        <span className={`text-[10px] font-black uppercase px-3 py-1.5 rounded-full border-2 tracking-widest ${statusBadge[b.status] || statusBadge.pending}`}>
+                                                                            {b.status}
+                                                                        </span>
+                                                                    </div>
                                                                 </div>
 
-                                                                {/* Booking Details Grid */}
-                                                                <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4 bg-gray-50 rounded-xl p-4">
-                                                                    <div>
-                                                                        <p className="text-xs text-gray-400 font-medium">Booked By</p>
-                                                                        <p className="font-semibold text-gray-800 text-sm mt-0.5">{b.userName || "Farmer"}</p>
+                                                                {/* Details Grid */}
+                                                                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+                                                                    <div className="bg-gray-50 rounded-2xl p-4 border border-gray-100">
+                                                                        <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Pricing</p>
+                                                                        <p className="text-lg font-black text-green-700 mt-1">₹{b.totalPrice}</p>
                                                                     </div>
-                                                                    <div>
-                                                                        <p className="text-xs text-gray-400 font-medium">Duration</p>
-                                                                        <p className="font-semibold text-gray-800 text-sm mt-0.5">{b.duration} hours</p>
+                                                                    <div className="bg-gray-50 rounded-2xl p-4 border border-gray-100">
+                                                                        <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Duration</p>
+                                                                        <p className="text-lg font-black text-gray-900 mt-1">{b.duration}h</p>
                                                                     </div>
-                                                                    <div>
-                                                                        <p className="text-xs text-gray-400 font-medium">Total Amount</p>
-                                                                        <p className="font-bold text-green-700 text-sm mt-0.5">₹{b.totalPrice}</p>
-                                                                    </div>
-                                                                    <div>
-                                                                        <p className="text-xs text-gray-400 font-medium">Booked On</p>
-                                                                        <p className="font-semibold text-gray-800 text-sm mt-0.5">
-                                                                            {b.createdAt ? format(new Date(b.createdAt), "MMM dd, yyyy") : "—"}
+                                                                    <div className="col-span-2 bg-gray-50 rounded-2xl p-4 border border-gray-100">
+                                                                        <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Scheduled For</p>
+                                                                        <p className="text-sm font-bold text-gray-800 mt-1 truncate">
+                                                                            {b.startTime ? format(new Date(b.startTime), "MMM dd • HH:mm") : b.date}
                                                                         </p>
                                                                     </div>
                                                                 </div>
 
                                                                 {/* Contact Strip */}
                                                                 {b.userPhone && (
-                                                                    <div className="flex items-center gap-3 mb-4 p-3 bg-blue-50 rounded-xl border border-blue-100">
-                                                                        <div className="w-9 h-9 bg-blue-100 rounded-xl flex items-center justify-center flex-shrink-0">
-                                                                            <MdPhone className="h-5 w-5 text-blue-600" />
+                                                                    <div className="flex flex-col md:flex-row items-center gap-4 mb-6 p-4 bg-indigo-50/50 rounded-2xl border-2 border-indigo-100/50">
+                                                                        <div className="flex items-center gap-3 flex-1 min-w-0">
+                                                                            <div className="w-10 h-10 bg-indigo-100 rounded-xl flex items-center justify-center text-indigo-600 flex-shrink-0">
+                                                                                <MdPhone />
+                                                                            </div>
+                                                                            <div>
+                                                                                <p className="text-[10px] font-black text-indigo-400 uppercase tracking-widest">Farmer Contact</p>
+                                                                                <p className="font-black text-indigo-900 text-sm">{b.userPhone}</p>
+                                                                            </div>
                                                                         </div>
-                                                                        <div className="flex-1 min-w-0">
-                                                                            <p className="text-xs text-blue-500 font-medium">Booker's Contact</p>
-                                                                            <p className="font-bold text-blue-900 text-sm">{b.userPhone}</p>
-                                                                            {b.userAddress && <p className="text-xs text-blue-600 truncate mt-0.5">{b.userAddress}</p>}
-                                                                        </div>
-                                                                        <div className="flex gap-2 flex-shrink-0">
-                                                                            <a href={`tel:${b.userPhone}`}
-                                                                                className="flex items-center gap-1 px-3 py-1.5 bg-blue-600 text-white text-xs font-bold rounded-lg hover:bg-blue-700 transition">
-                                                                                <MdPhone className="h-3.5 w-3.5" /> Call
-                                                                            </a>
-                                                                            <a href={`https://wa.me/91${String(b.userPhone || "").replace(/[^0-9]/g, '')}`}
-                                                                                target="_blank" rel="noreferrer"
-                                                                                className="flex items-center gap-1 px-3 py-1.5 bg-green-500 text-white text-xs font-bold rounded-lg hover:bg-green-600 transition">
-                                                                                <MdMessage className="h-3.5 w-3.5" /> WhatsApp
-                                                                            </a>
+                                                                        <div className="flex gap-2 w-full md:w-auto">
+                                                                            <a href={`tel:${b.userPhone}`} className="flex-1 md:flex-none py-3 px-6 bg-indigo-600 text-white text-[10px] font-black uppercase tracking-widest rounded-xl text-center active:scale-95 transition-all">Call Now</a>
+                                                                            <a href={`https://wa.me/91${String(b.userPhone || "").replace(/[^0-9]/g, '')}`} target="_blank" rel="noreferrer" className="flex-1 md:flex-none py-3 px-6 bg-green-500 text-white text-[10px] font-black uppercase tracking-widest rounded-xl text-center active:scale-95 transition-all">WhatsApp</a>
                                                                         </div>
                                                                     </div>
                                                                 )}
 
                                                                 {/* Status Action Buttons */}
-                                                                <div className="flex gap-3 flex-wrap items-center">
+                                                                <div className="flex flex-col sm:flex-row gap-3">
                                                                     {b.status === "pending" && (
                                                                         <>
                                                                             <button onClick={async () => {
@@ -563,8 +616,8 @@ const Dashboard = () => {
                                                                                     createdAt: new Date().toISOString(), read: false,
                                                                                 });
                                                                                 toast.success("Marked as Upcoming ✓");
-                                                                            }} className="flex items-center gap-1.5 px-4 py-2 bg-blue-600 text-white text-sm font-bold rounded-xl hover:bg-blue-700 transition">
-                                                                                <MdCheckCircle className="h-4 w-4" /> Verify & Mark Upcoming
+                                                                            }} className="flex-1 py-4 bg-blue-600 text-white text-xs font-black uppercase tracking-widest rounded-2xl shadow-lg shadow-blue-100 active:scale-95 transition-all">
+                                                                                Verify & Confirm
                                                                             </button>
                                                                             <button onClick={async () => {
                                                                                 await set(ref(db, `bookings/${b.id}/status`), "cancelled");
@@ -574,8 +627,8 @@ const Dashboard = () => {
                                                                                     createdAt: new Date().toISOString(), read: false,
                                                                                 });
                                                                                 toast.success("Booking declined");
-                                                                            }} className="flex items-center gap-1.5 px-4 py-2 bg-red-50 text-red-600 text-sm font-bold rounded-xl hover:bg-red-100 border border-red-200 transition">
-                                                                                <MdCancel className="h-4 w-4" /> Decline
+                                                                            }} className="flex-1 py-4 bg-red-50 text-red-600 text-xs font-black uppercase tracking-widest rounded-2xl border-2 border-red-100 active:scale-95 transition-all">
+                                                                                Decline
                                                                             </button>
                                                                         </>
                                                                     )}
@@ -588,8 +641,8 @@ const Dashboard = () => {
                                                                                 createdAt: new Date().toISOString(), read: false,
                                                                             });
                                                                             toast.success("Booking confirmed ✓");
-                                                                        }} className="flex items-center gap-1.5 px-4 py-2 bg-indigo-600 text-white text-sm font-bold rounded-xl hover:bg-indigo-700 transition">
-                                                                            <MdCheckCircle className="h-4 w-4" /> Confirm Receipt
+                                                                        }} className="w-full py-4 bg-indigo-600 text-white text-xs font-black uppercase tracking-widest rounded-2xl shadow-lg shadow-indigo-100 active:scale-95 transition-all">
+                                                                            Confirm Handover
                                                                         </button>
                                                                     )}
                                                                     {b.status === "confirmed" && (
@@ -601,33 +654,25 @@ const Dashboard = () => {
                                                                                 createdAt: new Date().toISOString(), read: false,
                                                                             });
                                                                             toast.success("Booking completed ✓");
-                                                                        }} className="flex items-center gap-1.5 px-4 py-2 bg-purple-600 text-white text-sm font-bold rounded-xl hover:bg-purple-700 transition">
-                                                                            <MdDone className="h-4 w-4" /> Mark as Completed
+                                                                        }} className="w-full py-4 bg-purple-600 text-white text-xs font-black uppercase tracking-widest rounded-2xl shadow-lg shadow-purple-100 active:scale-95 transition-all">
+                                                                            Finalize Session
                                                                         </button>
                                                                     )}
                                                                     {b.status === "completed" && (
-                                                                        <div className="flex flex-col gap-2">
-                                                                            <span className="flex items-center gap-1.5 px-4 py-2 text-sm font-bold rounded-xl bg-purple-50 text-purple-700 border border-purple-200">
-                                                                                ✅ Booking Completed
-                                                                            </span>
+                                                                        <div className="flex flex-col gap-3 w-full">
+                                                                            <div className="w-full py-4 bg-green-50 text-green-700 text-xs font-black uppercase tracking-widest rounded-2xl text-center border-2 border-green-100 flex items-center justify-center gap-2">
+                                                                                <MdCheckCircle /> Session Completed
+                                                                            </div>
                                                                             {!b.damageReported ? (
-                                                                                <button 
-                                                                                    onClick={() => setSelectedBookingForDamage(b)}
-                                                                                    className="flex items-center justify-center gap-1.5 px-4 py-2 bg-red-50 text-red-600 text-xs font-bold rounded-xl hover:bg-red-100 border border-red-200 transition"
-                                                                                >
-                                                                                    <MdReportProblem /> Report Damage
+                                                                                <button onClick={() => setSelectedBookingForDamage(b)} className="w-full py-4 bg-amber-50 text-amber-600 text-xs font-black uppercase tracking-widest rounded-2xl border-2 border-amber-100 active:scale-95 transition-all">
+                                                                                    Report Issue / Damage
                                                                                 </button>
                                                                             ) : (
-                                                                                <span className="flex items-center justify-center gap-1.5 px-4 py-2 bg-amber-50 text-amber-600 text-[10px] font-black uppercase rounded-xl border border-amber-200">
-                                                                                    Claim Under Review 🛡️
-                                                                                </span>
+                                                                                <div className="w-full py-4 bg-amber-500 text-white text-xs font-black uppercase tracking-widest rounded-2xl text-center shadow-lg shadow-amber-100">
+                                                                                    Claim Pending Review 🛡️
+                                                                                </div>
                                                                             )}
                                                                         </div>
-                                                                    )}
-                                                                    {b.status === "cancelled" && (
-                                                                        <span className="flex items-center gap-1.5 px-4 py-2 text-sm font-bold rounded-xl bg-red-50 text-red-600 border border-red-200">
-                                                                            ❌ Booking Declined
-                                                                        </span>
                                                                     )}
                                                                 </div>
                                                             </div>

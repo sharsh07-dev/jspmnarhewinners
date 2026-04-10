@@ -21,7 +21,10 @@ const AdminDashboard = () => {
         totalRevenue: 0,
         totalGst: 0,
         damageFund: 250000,
-        recentTransactions: []
+        affiliateRevenue: 0, // 5% of bookings
+        subscriptionRevenue: 0, // Total from subscriptions
+        recentTransactions: [],
+        subscriptionList: []
     });
     const [claims, setClaims] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -39,6 +42,7 @@ const AdminDashboard = () => {
                 const data = snap.val();
                 let revenue = 0;
                 let gst = 0;
+                let affiliate = 0;
                 const txns = [];
 
                 Object.keys(data).forEach(id => {
@@ -48,6 +52,7 @@ const AdminDashboard = () => {
                         const price = b.totalPrice || 0;
                         revenue += price;
                         gst += (price * 0.18);
+                        affiliate += (price * 0.05); // 5% platform fee
                     }
                 });
 
@@ -56,7 +61,28 @@ const AdminDashboard = () => {
                     totalBookings: Object.keys(data).length,
                     totalRevenue: revenue,
                     totalGst: gst,
-                    recentTransactions: txns.sort((a,b) => new Date(b.createdAt) - new Date(a.createdAt)).slice(0, 5)
+                    affiliateRevenue: affiliate,
+                    recentTransactions: txns.sort((a,b) => new Date(b.createdAt) - new Date(a.createdAt)).slice(0, 10)
+                }));
+            }
+        });
+
+        // Listen to Subscriptions for Platform Revenue
+        const subscRef = ref(db, "subscriptions");
+        const unsubSubs = onValue(subscRef, (snap) => {
+            if (snap.exists()) {
+                const data = snap.val();
+                let totalSub = 0;
+                const list = [];
+                Object.keys(data).forEach(id => {
+                    const s = data[id];
+                    totalSub += (s.amount || 0);
+                    list.push({ id, ...s });
+                });
+                setStats(prev => ({
+                    ...prev,
+                    subscriptionRevenue: totalSub,
+                    subscriptionList: list.sort((a,b) => new Date(b.createdAt) - new Date(a.createdAt))
                 }));
             }
         });
@@ -82,6 +108,7 @@ const AdminDashboard = () => {
             unsubBookings();
             unsubClaims();
             unsubUsers();
+            unsubsSubs();
         };
     }, [user]);
 
@@ -134,14 +161,26 @@ const AdminDashboard = () => {
                 {/* KPI Grid */}
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                     <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: 0.1 }} 
+                        className="bg-gradient-to-br from-green-600 to-emerald-700 rounded-3xl p-6 text-white shadow-lg border border-green-500">
+                        <div className="w-12 h-12 bg-white/20 rounded-2xl flex items-center justify-center mb-4 backdrop-blur-md">
+                            <MdAttachMoney className="h-6 w-6" />
+                        </div>
+                        <p className="text-xs font-bold uppercase tracking-wider opacity-80">Affiliate Income (5%)</p>
+                        <p className="text-3xl font-black mt-1">₹{stats.affiliateRevenue.toLocaleString()}</p>
+                        <div className="mt-2 text-[10px] font-bold bg-white/10 w-fit px-2 py-0.5 rounded-full">
+                            From ₹{stats.totalRevenue.toLocaleString()} Transactions
+                        </div>
+                    </motion.div>
+
+                    <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: 0.2 }} 
                         className="bg-white rounded-3xl p-6 border border-gray-100 shadow-sm hover:shadow-md transition">
                         <div className="w-12 h-12 bg-blue-50 text-blue-600 rounded-2xl flex items-center justify-center mb-4">
                             <MdAccountBalanceWallet className="h-6 w-6" />
                         </div>
-                        <p className="text-sm text-gray-400 font-bold uppercase tracking-wider">Total Revenue</p>
-                        <p className="text-3xl font-black text-gray-900 mt-1">₹{stats.totalRevenue.toLocaleString()}</p>
-                        <div className="mt-2 flex items-center gap-1 text-xs font-bold text-green-500">
-                            <MdTrendingUp /> Platform Gross
+                        <p className="text-sm text-gray-400 font-bold uppercase tracking-wider">Subscription Income</p>
+                        <p className="text-3xl font-black text-gray-900 mt-1">₹{stats.subscriptionRevenue.toLocaleString()}</p>
+                        <div className="mt-2 flex items-center gap-1 text-xs font-bold text-blue-600">
+                            {stats.subscriptionList.length} Active Plans
                         </div>
                     </motion.div>
 
@@ -181,6 +220,9 @@ const AdminDashboard = () => {
                     <button onClick={() => setActiveTab("overview")} className={`px-8 py-4 font-black text-sm uppercase tracking-widest border-b-4 transition-all ${activeTab === "overview" ? "border-green-600 text-green-700" : "border-transparent text-gray-400 hover:text-gray-600"}`}>
                         Overview
                     </button>
+                    <button onClick={() => setActiveTab("revenue")} className={`px-8 py-4 font-black text-sm uppercase tracking-widest border-b-4 transition-all ${activeTab === "revenue" ? "border-green-600 text-green-700" : "border-transparent text-gray-400 hover:text-gray-600"}`}>
+                        Revenue Analysis
+                    </button>
                     <button onClick={() => setActiveTab("claims")} className={`px-8 py-4 font-black text-sm uppercase tracking-widest border-b-4 transition-all ${activeTab === "claims" ? "border-red-600 text-red-700" : "border-transparent text-gray-400 hover:text-gray-600"}`}>
                         Damage Claims ({claims.length})
                     </button>
@@ -203,25 +245,55 @@ const AdminDashboard = () => {
                                         {stats.recentTransactions.length === 0 ? (
                                             <div className="p-10 text-center text-gray-400">No transactions recorded.</div>
                                         ) : (
-                                            stats.recentTransactions.map(txn => (
-                                                <div key={txn.id} className="p-5 flex items-center justify-between hover:bg-gray-50 transition">
-                                                    <div className="flex items-center gap-4">
-                                                        <div className={`w-10 h-10 rounded-xl flex items-center justify-center text-lg ${txn.status === 'completed' ? 'bg-green-50 text-green-600' : 'bg-gray-50 text-gray-400'}`}>
-                                                            {txn.isPesticide ? "🌿" : "🚜"}
+                                            <>
+                                            {/* Desktop Table-like layout */}
+                                            <div className="hidden md:block divide-y divide-gray-100">
+                                                {stats.recentTransactions.map(txn => (
+                                                    <div key={txn.id} className="p-5 flex items-center justify-between hover:bg-gray-50 transition">
+                                                        <div className="flex items-center gap-4">
+                                                            <div className={`w-10 h-10 rounded-xl flex items-center justify-center text-lg ${txn.status === 'completed' ? 'bg-green-50 text-green-600' : 'bg-gray-50 text-gray-400'}`}>
+                                                                {txn.isPesticide ? "🌿" : "🚜"}
+                                                            </div>
+                                                            <div>
+                                                                <p className="font-bold text-gray-900 text-sm">{txn.equipmentName}</p>
+                                                                <p className="text-xs text-gray-400 mt-0.5">By {txn.userName || 'Anonymous'} • {txn.createdAt ? format(new Date(txn.createdAt), "MMM dd, HH:mm") : 'N/A'}</p>
+                                                            </div>
                                                         </div>
-                                                        <div>
-                                                            <p className="font-bold text-gray-900 text-sm">{txn.equipmentName}</p>
-                                                            <p className="text-xs text-gray-400 mt-0.5">By {txn.userName || 'Anonymous'} • {txn.createdAt ? format(new Date(txn.createdAt), "MMM dd, HH:mm") : 'N/A'}</p>
+                                                        <div className="text-right">
+                                                            <p className="font-black text-gray-900 text-sm">₹{txn.totalPrice?.toLocaleString()}</p>
+                                                            <p className={`text-[10px] font-bold uppercase ${txn.status === 'completed' ? 'text-green-500' : 'text-orange-500'}`}>
+                                                                {txn.status}
+                                                            </p>
                                                         </div>
                                                     </div>
-                                                    <div className="text-right">
-                                                        <p className="font-black text-gray-900 text-sm">₹{txn.totalPrice?.toLocaleString()}</p>
-                                                        <p className={`text-[10px] font-bold uppercase ${txn.status === 'completed' ? 'text-green-500' : 'text-orange-500'}`}>
-                                                            {txn.status}
-                                                        </p>
+                                                ))}
+                                            </div>
+
+                                            {/* Mobile Card Layout */}
+                                            <div className="md:hidden space-y-3 p-4">
+                                                {stats.recentTransactions.map(txn => (
+                                                    <div key={txn.id} className="bg-gray-50 rounded-2xl p-4 flex flex-col gap-3 border border-gray-100 active:scale-[0.98] transition-transform">
+                                                        <div className="flex items-center justify-between">
+                                                            <div className="flex items-center gap-3">
+                                                                <div className={`w-10 h-10 rounded-xl flex items-center justify-center text-lg ${txn.status === 'completed' ? 'bg-green-100' : 'bg-gray-200'}`}>
+                                                                    {txn.isPesticide ? "🌿" : "🚜"}
+                                                                </div>
+                                                                <div>
+                                                                    <p className="font-bold text-gray-900 text-sm truncate max-w-[150px]">{txn.equipmentName}</p>
+                                                                    <p className="text-[10px] text-gray-400">{txn.createdAt ? format(new Date(txn.createdAt), "MMM dd") : 'N/A'}</p>
+                                                                </div>
+                                                            </div>
+                                                            <div className="text-right">
+                                                                <p className="font-black text-gray-900">₹{txn.totalPrice}</p>
+                                                                <span className={`text-[8px] font-bold uppercase px-1.5 py-0.5 rounded-full ${txn.status === 'completed' ? 'bg-green-100 text-green-700' : 'bg-orange-100 text-orange-700'}`}>
+                                                                    {txn.status}
+                                                                </span>
+                                                            </div>
+                                                        </div>
                                                     </div>
-                                                </div>
-                                            ))
+                                                ))}
+                                            </div>
+                                            </>
                                         )}
                                     </div>
                                 </div>
@@ -270,6 +342,94 @@ const AdminDashboard = () => {
                         </motion.div>
                     )}
 
+                    {activeTab === "revenue" && (
+                        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} className="space-y-8">
+                            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                                {/* Affiliate Breakdown */}
+                                <div className="bg-white rounded-[32px] border border-gray-100 shadow-sm overflow-hidden">
+                                    <div className="p-6 border-b border-gray-100 bg-green-50/30">
+                                        <h3 className="font-black text-gray-900 flex items-center gap-2">
+                                            <MdTrendingUp className="text-green-600" /> Affiliate Commission (5%)
+                                        </h3>
+                                    </div>
+                                    <div className="p-6 space-y-6">
+                                        <div className="flex items-end justify-between">
+                                            <div>
+                                                <p className="text-xs font-bold text-gray-400 uppercase">Current Month</p>
+                                                <p className="text-4xl font-black text-gray-900">₹{stats.affiliateRevenue.toLocaleString()}</p>
+                                            </div>
+                                            <div className="text-right">
+                                                <p className="text-xs font-bold text-green-600">+12% vs last month</p>
+                                                <p className="text-[10px] text-gray-400 font-bold uppercase mt-1">Target: ₹50,000</p>
+                                            </div>
+                                        </div>
+                                        <div className="h-3 w-full bg-gray-100 rounded-full overflow-hidden">
+                                            <motion.div 
+                                                initial={{ width: 0 }} 
+                                                animate={{ width: `${Math.min((stats.affiliateRevenue/50000)*100, 100)}%` }}
+                                                className="h-full bg-green-500" 
+                                            />
+                                        </div>
+                                        <div className="divide-y divide-gray-50 border-t border-gray-50">
+                                            {stats.recentTransactions.filter(t => t.status==='completed').slice(0, 5).map(txn => (
+                                                <div key={txn.id} className="py-3 flex justify-between items-center">
+                                                    <div>
+                                                        <p className="text-sm font-bold text-gray-800">{txn.equipmentName}</p>
+                                                        <p className="text-[10px] text-gray-400">Transaction: ₹{txn.totalPrice?.toLocaleString()}</p>
+                                                    </div>
+                                                    <p className="text-sm font-black text-green-600">+₹{(txn.totalPrice*0.05).toFixed(2)}</p>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Subscription Breakdown */}
+                                <div className="bg-white rounded-[32px] border border-gray-100 shadow-sm overflow-hidden">
+                                    <div className="p-6 border-b border-gray-100 bg-blue-50/30">
+                                        <h3 className="font-black text-gray-900 flex items-center gap-2">
+                                            <MdOutlinePayment className="text-blue-600" /> Subscription Revenue
+                                        </h3>
+                                    </div>
+                                    <div className="p-6 space-y-6">
+                                        <div className="flex items-end justify-between">
+                                            <div>
+                                                <p className="text-xs font-bold text-gray-400 uppercase">SaaS Earnings</p>
+                                                <p className="text-4xl font-black text-gray-900">₹{stats.subscriptionRevenue.toLocaleString()}</p>
+                                            </div>
+                                            <div className="text-right">
+                                                <p className="text-xs font-bold text-blue-600">{stats.subscriptionList.length} Subscribers</p>
+                                                <p className="text-[10px] text-gray-400 font-bold uppercase mt-1">Retention: 94%</p>
+                                            </div>
+                                        </div>
+                                        <div className="h-3 w-full bg-gray-100 rounded-full overflow-hidden">
+                                            <motion.div 
+                                                initial={{ width: 0 }} 
+                                                animate={{ width: "85%" }}
+                                                className="h-full bg-blue-500" 
+                                            />
+                                        </div>
+                                        <div className="divide-y divide-gray-50 border-t border-gray-50">
+                                            {stats.subscriptionList.length === 0 ? (
+                                                <div className="py-10 text-center text-gray-400 text-xs font-bold">No registered subscriptions yet.</div>
+                                            ) : (
+                                                stats.subscriptionList.slice(0,5).map(sub => (
+                                                    <div key={sub.id} className="py-3 flex justify-between items-center">
+                                                        <div>
+                                                            <p className="text-sm font-bold text-gray-800">{sub.planName || 'Pro Plan'}</p>
+                                                            <p className="text-[10px] text-gray-400">{sub.userName || 'User'} • {sub.createdAt ? format(new Date(sub.createdAt), "MMM dd") : 'N/A'}</p>
+                                                        </div>
+                                                        <p className="text-sm font-black text-blue-600">+₹{sub.amount}</p>
+                                                    </div>
+                                                ))
+                                            )}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </motion.div>
+                    )}
+
                     {activeTab === "claims" && (
                         <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 20 }} className="space-y-6">
                             <div className="bg-white rounded-[32px] border border-gray-100 shadow-sm overflow-hidden">
@@ -295,20 +455,22 @@ const AdminDashboard = () => {
                                     ) : (
                                         <div className="divide-y divide-gray-100">
                                             {claims.map(c => (
-                                                <div key={c.id} className="p-8 hover:bg-gray-50 transition grid grid-cols-1 lg:grid-cols-4 gap-8">
+                                                <div key={c.id} className="p-6 md:p-8 hover:bg-gray-50 transition grid grid-cols-1 lg:grid-cols-4 gap-6 md:gap-8">
                                                     <div className="lg:col-span-1 space-y-4">
                                                         <div className="relative aspect-video rounded-2xl overflow-hidden shadow-md border-2 border-white">
                                                             <img src={c.images?.[0] || 'https://images.unsplash.com/photo-1594833211511-7a6c9d8da4cf'} className="w-full h-full object-cover" />
                                                             <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent flex items-bottom p-3">
-                                                                <p className="mt-auto text-[10px] text-white font-bold">CID: {c.id}</p>
+                                                                <p className="mt-auto text-[10px] text-white font-bold truncate">CID: {c.id}</p>
                                                             </div>
                                                         </div>
-                                                        <span className={`px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest flex items-center justify-center gap-1.5 border-2 ${
-                                                            c.status === 'reported' ? 'bg-amber-50 text-amber-600 border-amber-200' :
-                                                            c.status === 'verified' ? 'bg-blue-50 text-blue-600 border-blue-200' : 'bg-green-50 text-green-600 border-green-200'
-                                                        }`}>
-                                                            {c.status}
-                                                        </span>
+                                                        <div className="flex items-center justify-between lg:justify-center">
+                                                            <span className={`px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest flex items-center justify-center gap-1.5 border-2 w-full lg:w-auto ${
+                                                                c.status === 'reported' ? 'bg-amber-50 text-amber-600 border-amber-200' :
+                                                                c.status === 'verified' ? 'bg-blue-50 text-blue-600 border-blue-200' : 'bg-green-50 text-green-600 border-green-200'
+                                                            }`}>
+                                                                {c.status}
+                                                            </span>
+                                                        </div>
                                                     </div>
 
                                                     <div className="lg:col-span-2 space-y-4">
@@ -319,7 +481,7 @@ const AdminDashboard = () => {
                                                         <div className="bg-gray-100/50 rounded-2xl p-4 border border-gray-100">
                                                             <div className="flex items-center gap-3 mb-3">
                                                                 <div className="w-8 h-8 bg-black text-white rounded-lg flex items-center justify-center text-xs">🤖</div>
-                                                                <p className="text-xs font-black uppercase tracking-widest text-gray-900">xAI Grok Assessment</p>
+                                                                <p className="text-xs font-black uppercase tracking-widest text-gray-900">AI Assessment</p>
                                                             </div>
                                                             <div className="grid grid-cols-2 gap-4">
                                                                 <div>
@@ -334,28 +496,28 @@ const AdminDashboard = () => {
                                                         </div>
                                                     </div>
 
-                                                    <div className="lg:col-span-1 flex flex-col justify-between">
-                                                        <div className="text-right">
-                                                            <p className="text-xs font-black text-gray-400 uppercase tracking-widest">Proposed Settlement</p>
+                                                    <div className="lg:col-span-1 flex flex-col justify-between gap-4">
+                                                        <div className="text-left lg:text-right">
+                                                            <p className="text-xs font-black text-gray-400 uppercase tracking-widest">Settlement</p>
                                                             <p className="text-2xl font-black text-gray-900">₹{c.estimatedCost?.toLocaleString()}</p>
                                                         </div>
-                                                        <div className="space-y-2 mt-4">
+                                                        <div className="space-y-2 mt-auto">
                                                             {c.status === 'reported' && (
-                                                                <button onClick={() => handleApproveClaim(c.id)} className="w-full py-3 bg-indigo-600 text-white font-black text-xs uppercase tracking-widest rounded-xl shadow-lg shadow-indigo-100 hover:bg-indigo-700 transition">
+                                                                <button onClick={() => handleApproveClaim(c.id)} className="w-full py-4 lg:py-3 bg-indigo-600 text-white font-black text-xs uppercase tracking-widest rounded-xl shadow-lg shadow-indigo-100 active:scale-[0.98] transition">
                                                                     Verify Evidence
                                                                 </button>
                                                             )}
                                                             {c.status === 'verified' && (
-                                                                <button onClick={() => handleProcessComp(c.id, c.estimatedCost)} className="w-full py-3 bg-green-600 text-white font-black text-xs uppercase tracking-widest rounded-xl shadow-lg shadow-green-100 hover:bg-green-700 transition">
+                                                                <button onClick={() => handleProcessComp(c.id, c.estimatedCost)} className="w-full py-4 lg:py-3 bg-green-600 text-white font-black text-xs uppercase tracking-widest rounded-xl shadow-lg shadow-green-100 active:scale-[0.98] transition">
                                                                     Authorize Payment
                                                                 </button>
                                                             )}
                                                             {c.status === 'paid' && (
-                                                                <div className="w-full py-3 bg-gray-50 text-gray-400 font-black text-xs uppercase tracking-widest rounded-xl text-center border-2 border-gray-100">
+                                                                <div className="w-full py-4 lg:py-3 bg-gray-50 text-gray-400 font-black text-xs uppercase tracking-widest rounded-xl text-center border-2 border-gray-100">
                                                                     Case Closed
                                                                 </div>
                                                             )}
-                                                            <button className="w-full py-3 bg-white text-gray-900 border-2 border-gray-100 font-black text-xs uppercase tracking-widest rounded-xl hover:bg-gray-50 transition">
+                                                            <button className="w-full py-4 lg:py-3 bg-white text-gray-900 border-2 border-gray-100 font-black text-xs uppercase tracking-widest rounded-xl active:scale-[0.98] transition">
                                                                 Contact Owner
                                                             </button>
                                                         </div>

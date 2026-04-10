@@ -105,7 +105,7 @@ const LiveMandiPrices = () => {
                     </select>
                 </div>
 
-                {/* Data Display Table */}
+                {/* Data Display - Responsive Layout */}
                 {loading ? (
                     <div className="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden">
                         <div className="p-10 flex flex-col items-center justify-center">
@@ -114,73 +114,125 @@ const LiveMandiPrices = () => {
                         </div>
                     </div>
                 ) : (
-                    <div className="bg-white rounded-3xl shadow-xl border border-gray-100 overflow-hidden">
-                        <div className="overflow-x-auto">
-                            <table className="w-full text-left border-collapse">
-                                <thead>
-                                    <tr className="bg-gray-50/80 border-b border-gray-100">
-                                        <th className="px-6 py-4 text-xs font-bold text-gray-400 uppercase tracking-widest">Commodity</th>
-                                        <th className="px-6 py-4 text-xs font-bold text-gray-400 uppercase tracking-widest">Market & District</th>
-                                        <th className="px-6 py-4 text-xs font-bold text-gray-400 uppercase tracking-widest">State</th>
-                                        <th className="px-6 py-4 text-xs font-bold text-gray-400 uppercase tracking-widest">Min Price</th>
-                                        <th className="px-6 py-4 text-xs font-bold text-gray-400 uppercase tracking-widest">Max Price</th>
-                                        <th className="px-6 py-4 text-xs font-bold text-gray-400 uppercase tracking-widest">Modal Price</th>
-                                        <th className="px-6 py-4 text-xs font-bold text-gray-400 uppercase tracking-widest">Date</th>
-                                    </tr>
-                                </thead>
-                                <tbody className="divide-y divide-gray-50">
-                                    {filteredPrices.length === 0 ? (
-                                        <tr>
-                                            <td colSpan="7" className="px-6 py-20 text-center text-gray-500 text-lg">
-                                                No commodities found matching your search criteria.
-                                            </td>
+                    <div className="space-y-4 md:space-y-0">
+                        {/* Desktop Table View */}
+                        <div className="hidden md:block bg-white rounded-3xl shadow-xl border border-gray-100 overflow-hidden">
+                            <div className="overflow-x-auto">
+                                <table className="w-full text-left border-collapse">
+                                    <thead>
+                                        <tr className="bg-gray-50/80 border-b border-gray-100">
+                                            <th className="px-6 py-4 text-xs font-bold text-gray-400 uppercase tracking-widest">Commodity</th>
+                                            <th className="px-6 py-4 text-xs font-bold text-gray-400 uppercase tracking-widest">Market & District</th>
+                                            <th className="px-6 py-4 text-xs font-bold text-gray-400 uppercase tracking-widest">State</th>
+                                            <th className="px-6 py-4 text-xs font-bold text-gray-400 uppercase tracking-widest">Min Price</th>
+                                            <th className="px-6 py-4 text-xs font-bold text-gray-400 uppercase tracking-widest">Max Price</th>
+                                            <th className="px-6 py-4 text-xs font-bold text-gray-400 uppercase tracking-widest">Modal Price</th>
+                                            <th className="px-6 py-4 text-xs font-bold text-gray-400 uppercase tracking-widest">Date</th>
                                         </tr>
-                                    ) : (
-                                        filteredPrices.map((item, idx) => (
-                                            <motion.tr 
-                                                initial={{ opacity: 0, x: -10 }}
-                                                animate={{ opacity: 1, x: 0 }}
-                                                transition={{ delay: Math.min(idx * 0.03, 0.5) }}
-                                                key={idx}
-                                                className="hover:bg-green-50/30 transition-colors group"
-                                            >
-                                                <td className="px-6 py-5">
-                                                    <div className="flex flex-col">
-                                                        <span className="text-sm font-bold text-gray-900">{item.commodity}</span>
-                                                        <span className="text-[10px] text-green-600 font-bold uppercase mt-0.5 tracking-wider">{item.variety}</span>
-                                                    </div>
+                                    </thead>
+                                    <tbody className="divide-y divide-gray-50">
+                                        {filteredPrices.length === 0 ? (
+                                            <tr>
+                                                <td colSpan="7" className="px-6 py-20 text-center text-gray-500 text-lg">
+                                                    No commodities found matching your search criteria.
                                                 </td>
-                                                <td className="px-6 py-5">
-                                                    <div className="flex flex-col">
-                                                        <span className="text-sm font-semibold text-gray-700">{item.market}</span>
-                                                        <span className="text-xs text-gray-400">{item.district}</span>
-                                                    </div>
-                                                </td>
-                                                <td className="px-6 py-5">
-                                                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
-                                                        {item.state}
-                                                    </span>
-                                                </td>
-                                                <td className="px-6 py-5">
-                                                    <span className="text-sm font-medium text-gray-600 tracking-tight">₹{item.min_price}</span>
-                                                </td>
-                                                <td className="px-6 py-5">
-                                                    <span className="text-sm font-medium text-gray-600 tracking-tight">₹{item.max_price}</span>
-                                                </td>
-                                                <td className="px-6 py-5">
-                                                    <div className="flex items-center gap-2">
-                                                        <span className="text-base font-black text-green-600 tracking-tight">₹{item.modal_price}</span>
-                                                        <span className="text-[10px] text-gray-400 font-medium">/Qt</span>
-                                                    </div>
-                                                </td>
-                                                <td className="px-6 py-5">
-                                                    <span className="text-xs font-bold text-gray-400">{item.arrival_date}</span>
-                                                </td>
-                                            </motion.tr>
-                                        ))
-                                    )}
-                                </tbody>
-                            </table>
+                                            </tr>
+                                        ) : (
+                                            filteredPrices.map((item, idx) => (
+                                                <motion.tr 
+                                                    initial={{ opacity: 0, x: -10 }}
+                                                    animate={{ opacity: 1, x: 0 }}
+                                                    transition={{ delay: Math.min(idx * 0.03, 0.5) }}
+                                                    key={idx}
+                                                    className="hover:bg-green-50/30 transition-colors group"
+                                                >
+                                                    <td className="px-6 py-5">
+                                                        <div className="flex flex-col">
+                                                            <span className="text-sm font-bold text-gray-900">{item.commodity}</span>
+                                                            <span className="text-[10px] text-green-600 font-bold uppercase mt-0.5 tracking-wider">{item.variety}</span>
+                                                        </div>
+                                                    </td>
+                                                    <td className="px-6 py-5">
+                                                        <div className="flex flex-col">
+                                                            <span className="text-sm font-semibold text-gray-700">{item.market}</span>
+                                                            <span className="text-xs text-gray-400">{item.district}</span>
+                                                        </div>
+                                                    </td>
+                                                    <td className="px-6 py-5">
+                                                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                                                            {item.state}
+                                                        </span>
+                                                    </td>
+                                                    <td className="px-6 py-5">
+                                                        <span className="text-sm font-medium text-gray-600 tracking-tight">₹{item.min_price}</span>
+                                                    </td>
+                                                    <td className="px-6 py-5">
+                                                        <span className="text-sm font-medium text-gray-600 tracking-tight">₹{item.max_price}</span>
+                                                    </td>
+                                                    <td className="px-6 py-5">
+                                                        <div className="flex items-center gap-2">
+                                                            <span className="text-base font-black text-green-600 tracking-tight">₹{item.modal_price}</span>
+                                                            <span className="text-[10px] text-gray-400 font-medium">/Qt</span>
+                                                        </div>
+                                                    </td>
+                                                    <td className="px-6 py-5">
+                                                        <span className="text-xs font-bold text-gray-400">{item.arrival_date}</span>
+                                                    </td>
+                                                </motion.tr>
+                                            ))
+                                        )}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        {/* Mobile Card View */}
+                        <div className="md:hidden space-y-4">
+                            {filteredPrices.length === 0 ? (
+                                <div className="p-10 text-center text-gray-500 bg-white rounded-2xl shadow-sm border border-gray-100">
+                                    No commodities found.
+                                </div>
+                            ) : (
+                                filteredPrices.map((item, idx) => (
+                                    <motion.div 
+                                        key={idx}
+                                        initial={{ opacity: 0, y: 10 }}
+                                        animate={{ opacity: 1, y: 0 }}
+                                        transition={{ delay: Math.min(idx * 0.05, 0.4) }}
+                                        className="bg-white p-5 rounded-[24px] shadow-sm border border-gray-100 flex flex-col gap-4 active:scale-[0.98] transition-transform"
+                                    >
+                                        <div className="flex justify-between items-start">
+                                            <div>
+                                                <h3 className="text-lg font-black text-gray-900">{item.commodity}</h3>
+                                                <p className="text-[10px] font-bold text-green-600 uppercase tracking-widest">{item.variety}</p>
+                                            </div>
+                                            <div className="bg-green-50 px-3 py-1 rounded-full border border-green-100">
+                                                <span className="text-sm font-black text-green-700">₹{item.modal_price}</span>
+                                            </div>
+                                        </div>
+                                        
+                                        <div className="grid grid-cols-2 gap-4 bg-gray-50 rounded-2xl p-4">
+                                            <div>
+                                                <p className="text-[10px] font-bold text-gray-400 uppercase tracking-tight">Market</p>
+                                                <p className="text-xs font-bold text-gray-800 truncate">{item.market}</p>
+                                            </div>
+                                            <div>
+                                                <p className="text-[10px] font-bold text-gray-400 uppercase tracking-tight">District</p>
+                                                <p className="text-xs font-bold text-gray-800 truncate">{item.district}</p>
+                                            </div>
+                                        </div>
+
+                                        <div className="flex items-center justify-between pt-2">
+                                            <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest flex items-center gap-1">
+                                                <MdLocationOn className="text-green-500" /> {item.state}
+                                            </span>
+                                            <span className="text-[10px] font-black text-gray-400 uppercase">
+                                                {item.arrival_date}
+                                            </span>
+                                        </div>
+                                    </motion.div>
+                                ))
+                            )}
                         </div>
                     </div>
                 )}

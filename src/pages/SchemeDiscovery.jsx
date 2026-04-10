@@ -486,17 +486,17 @@ const SchemeDiscovery = () => {
             {/* Scale-down Modal */}
             <AnimatePresence>
                 {selectedScheme && (
-                    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+                    <div className="fixed inset-0 z-[100] flex items-end md:items-center justify-center md:p-4">
                         <motion.div 
                             initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
                             onClick={() => setSelectedScheme(null)}
-                            className="absolute inset-0 bg-gray-900/40 backdrop-blur-sm"
+                            className="absolute inset-0 bg-gray-900/60 backdrop-blur-sm"
                         />
                         <motion.div 
-                            initial={{ opacity: 0, scale: 0.95, y: 20 }}
+                            initial={{ opacity: 0, scale: 0.95, y: 100 }}
                             animate={{ opacity: 1, scale: 1, y: 0 }}
-                            exit={{ opacity: 0, scale: 0.95, y: 20 }}
-                            className="bg-white rounded-[40px] shadow-2xl w-full max-w-2xl relative overflow-hidden flex flex-col max-h-[90vh]"
+                            exit={{ opacity: 0, scale: 0.95, y: 100 }}
+                            className="bg-white rounded-t-[32px] md:rounded-[40px] shadow-2xl w-full md:max-w-2xl relative overflow-hidden flex flex-col h-[95vh] md:h-auto md:max-h-[90vh] pb-safe"
                         >
                             <div className="p-8 border-b border-gray-50 flex items-start justify-between">
                                 <div className="space-y-3">
