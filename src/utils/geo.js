@@ -33,13 +33,20 @@ export const getUserLocation = () =>
         const success = (p) => resolve({ lat: p.coords.latitude, lng: p.coords.longitude });
         
         const error = (err) => {
+            // Error code 1 is PERMISSION_DENIED
+            if (err.code === 1) {
+                reject(new Error("Location permission denied. Please allow location access in your browser settings or use manual search."));
+                return;
+            }
+
             console.warn(`GPS High Accuracy failed (Error ${err.code}). Trying fallback...`);
             // Fallback to coarse location (faster, works better indoors/low signal)
             navigator.geolocation.getCurrentPosition(
                 success,
                 (err2) => {
                     console.error("Geolocation Fallback Error:", err2);
-                    reject(err2);
+                    // If fallback also fails, give a generic manual search advice
+                    reject(new Error("Could not detect location. Please search manually."));
                 },
                 { enableHighAccuracy: false, timeout: 10000, maximumAge: 1000 * 60 * 5 }
             );
