@@ -24,6 +24,14 @@ const DamageReportModal = ({ booking, onClose }) => {
     const [claimId, setClaimId] = useState(null);
     const [claimStatus, setClaimStatus] = useState("reported");
 
+    // Auto-detect existing claim
+    useEffect(() => {
+        if (booking.damageReported && booking.claimId) {
+            setClaimId(booking.claimId);
+            setStep(4);
+        }
+    }, [booking]);
+
     // Listen for live status updates if we have a claimId
     useEffect(() => {
         if (claimId) {
