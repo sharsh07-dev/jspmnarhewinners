@@ -7,6 +7,11 @@ import {
 } from "react-icons/md";
 import toast from "react-hot-toast";
 
+import * as pdfjsLib from "pdfjs-dist";
+
+// Configure PDF.js Worker
+pdfjsLib.GlobalWorkerOptions.workerSrc = `https://unpkg.com/pdfjs-dist@${pdfjsLib.version}/build/pdf.worker.min.mjs`;
+
 const IMGBB_API_KEY = "7ad87a0a10eabb5b4ba5fe2e5a10de1e";
 
 const uploadToImgBB = async (base64Data) => {
@@ -39,17 +44,43 @@ const LegalAdvisor = () => {
     const [isSpeaking, setIsSpeaking] = useState(false);
     const fileInputRef = useRef(null);
 
-    const handleFileUpload = (e) => {
+    const handleFileUpload = async (e) => {
         const file = e.target.files[0];
         if (!file) return;
         setResult(null);
         setError(null);
-        const reader = new FileReader();
-        reader.onloadend = () => {
-            setImage(reader.result);
-            startAnalysis(reader.result);
-        };
-        reader.readAsDataURL(file);
+
+        if (file.type === "application/pdf") {
+            try {
+                toast.loading("Converting PDF for scanning...", { id: "pdf-conv" });
+                const arrayBuffer = await file.arrayBuffer();
+                const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+                const page = await pdf.getPage(1); // Analyze first page
+                const viewport = page.getViewport({ scale: 1.5 });
+                const canvas = document.createElement("canvas");
+                const context = canvas.getContext("2d");
+                canvas.height = viewport.height;
+                canvas.width = viewport.width;
+
+                await page.render({ canvasContext: context, viewport: viewport }).promise;
+                const base64Image = canvas.toDataURL("image/png");
+                
+                setImage(base64Image);
+                startAnalysis(base64Image);
+                toast.dismiss("pdf-conv");
+            } catch (err) {
+                console.error("PDF Conversion Error:", err);
+                toast.error("Failed to read PDF. Try an image scanner instead.");
+                toast.dismiss("pdf-conv");
+            }
+        } else {
+            const reader = new FileReader();
+            reader.onloadend = () => {
+                setImage(reader.result);
+                startAnalysis(reader.result);
+            };
+            reader.readAsDataURL(file);
+        }
     };
 
     const startAnalysis = async (base64Image) => {
@@ -82,24 +113,24 @@ const LegalAdvisor = () => {
                             content: [
                                 {
                                     type: "text",
-                                    text: `You are an AI Legal Expert for Indian Farmers. 
-                                    Analyze the document image provided. 
-                                    Translate the complex legal jargon into VERY simple language that a farmer can understand.
+                                    text: `ACT AS AN INDIAN AGRI-LEGAL EXPERT. 
+                                    Analyze the image/document. 
+                                    IMPORTANT: GOVERNMENT GAZETTES, LAWS, AND ACTS ARE VALID INPUTS.
+                                    If it is a Gazette or Law, summarize the CORE RIGHTS and BENEFITS it gives to farmers.
+                                    EXTRACT: Document Type, Risk Level (0-100), Recommendation, and Key Clauses/Points.
+                                    SIMPLIFY all jargon for a village farmer.
                                     
-                                    Return ONLY a strict JSON object:
+                                    RETURN ONLY THIS JSON:
                                     {
-                                      "doc_type": "Type of document (e.g. Loan Agreement, Crop Purchase Contract)",
-                                      "risk_score": 0-100 (high is more dangerous),
-                                      "recommendation": "Safe to Sign" | "Review Carefully" | "NOT RECOMMENDED",
-                                      "summary": "Simple 2-sentence explanation in English",
-                                      "local_summary_marathi": "Simple explanation in Marathi",
-                                      "local_summary_hindi": "Simple explanation in Hindi",
-                                      "clauses": [
-                                        { "title": "Payment Terms", "explanation": "Simple explanation", "risk": "Low"|"Medium"|"High" },
-                                        { "title": "Lock-in Period", "explanation": "Simple explanation", "risk": "Low"|"Medium"|"High" }
-                                      ],
-                                      "risks": ["Specific hidden risk 1", "Specific risk 2"],
-                                      "is_valid_document": true/false
+                                      "doc_type": "Title",
+                                      "risk_score": Number,
+                                      "recommendation": "Advice",
+                                      "summary": "2-sentence English summary",
+                                      "local_summary_marathi": "Marathi summary",
+                                      "local_summary_hindi": "Hindi summary",
+                                      "clauses": [{ "title": "Key Point", "explanation": "Simple terms", "risk": "Low/Medium/High" }],
+                                      "risks": ["Risk point 1 or Note 1", "Risk point 2 or Note 2"],
+                                      "is_valid_document": true
                                     }`
                                 },
                                 {
@@ -116,17 +147,26 @@ const LegalAdvisor = () => {
             if (!res.ok) throw new Error("API_ERROR");
             const data = await res.json();
             const raw = data.choices?.[0]?.message?.content || "";
-            const jsonMatch = raw.match(/\{[\s\S]*\}/);
-            if (!jsonMatch) throw new Error("PARSE_ERROR");
-            const finalData = JSON.parse(jsonMatch[0]);
-
-            if (!finalData.is_valid_document) {
-                setError({
-                    type: "invalid",
-                    message: "This doesn't look like a legal or formal document.",
-                    hint: "Please upload a clear photo of an agreement, contract, or government scheme form."
-                });
-                return;
+            
+            // Refined JSON extraction: find the first { and the last }
+            let finalData;
+            try {
+                const startIndex = raw.indexOf('{');
+                const endIndex = raw.lastIndexOf('}');
+                if (startIndex === -1 || endIndex === -1) throw new Error("No JSON found");
+                const jsonStr = raw.substring(startIndex, endIndex + 1);
+                finalData = JSON.parse(jsonStr);
+            } catch (pErr) {
+                console.error("AI Parse Error. Raw output:", raw);
+                // Fallback for extreme cases: try to manually fix common LLM formatting issues
+                const cleanedRaw = raw.replace(/```json/g, "").replace(/```/g, "").trim();
+                const si = cleanedRaw.indexOf('{');
+                const ei = cleanedRaw.lastIndexOf('}');
+                if (si !== -1 && ei !== -1) {
+                    finalData = JSON.parse(cleanedRaw.substring(si, ei + 1));
+                } else {
+                    throw new Error("Invalid AI format");
+                }
             }
 
             setResult(finalData);
@@ -202,7 +242,7 @@ const LegalAdvisor = () => {
                                         <MdDocumentScanner className="text-xl text-blue-400" />
                                         <span>UPLOAD DOCUMENT</span>
                                     </button>
-                                    <input type="file" hidden ref={fileInputRef} onChange={handleFileUpload} accept="image/*" />
+                                    <input type="file" hidden ref={fileInputRef} onChange={handleFileUpload} accept="image/*,application/pdf" />
                                 </div>
                             ) : (
                                 <div className="relative flex-1 bg-slate-100">
