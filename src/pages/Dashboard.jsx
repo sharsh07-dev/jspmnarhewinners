@@ -236,9 +236,19 @@ const Dashboard = () => {
         }
     };
 
-    const totalEarnings = ownerBookings
+    const totalSpent = myBookings
         .filter(b => b.status === "completed")
         .reduce((s, b) => s + (b.totalPrice || 0), 0);
+
+    const grossEarnings = ownerBookings
+        .filter(b => b.status === "completed")
+        .reduce((s, b) => s + (b.totalPrice || 0), 0);
+
+    // Calculation: Total Earned - GST (approx 18% of base) - Commission (5%)
+    // Assuming totalPrice is the gross including GST
+    const totalGstOnEarnings = grossEarnings * 0.18;
+    const platformCommission = grossEarnings * 0.05;
+    const netOwnerProfit = grossEarnings - totalGstOnEarnings - platformCommission;
 
     const pendingOwnerBookings = ownerBookings.filter(b => b.status === "pending");
     const unreadCount = notifications.filter(n => !n.read).length;
@@ -307,7 +317,7 @@ const Dashboard = () => {
                                                 { label: "Total Bookings", value: myBookings.length, color: "bg-blue-50 text-blue-700" },
                                                 { label: "Upcoming", value: categorizedBookings.filter(b => b._category === "upcoming").length, color: "bg-yellow-50 text-yellow-700" },
                                                 { label: "My Listings", value: myEquipment.length, color: "bg-purple-50 text-purple-700" },
-                                                { label: "Earnings", value: `₹${totalEarnings}`, color: "bg-green-50 text-green-700" },
+                                                { label: "Net Profit", value: `₹${netOwnerProfit.toFixed(0)}`, color: "bg-green-50 text-green-700" },
                                             ].map((s, i) => (
                                                 <motion.div key={i} whileHover={{ y: -4 }} className={`rounded-2xl p-4 md:p-5 ${s.color} border border-black/5`}>
                                                     <p className="text-xl md:text-2xl font-bold">{s.value}</p>
@@ -987,27 +997,36 @@ const Dashboard = () => {
                                         </div>
 
                                         {/* Financial Summary */}
-                                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                                             <div className="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm flex items-center justify-between">
                                                 <div>
-                                                    <p className="text-sm font-bold text-gray-400">Total Spent</p>
-                                                    <p className="text-2xl font-black text-gray-900 mt-1">₹{myBookings.filter(b => b.status === 'completed').reduce((s,b) => s + (b.totalPrice||0), 0)}</p>
+                                                    <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Total Spent</p>
+                                                    <p className="text-2xl font-black text-gray-900 mt-1">₹{totalSpent}</p>
                                                 </div>
-                                                <div className="w-12 h-12 rounded-xl bg-red-50 flex items-center justify-center text-xl">💸</div>
+                                                <div className="w-10 h-10 rounded-xl bg-red-50 flex items-center justify-center text-lg">💸</div>
                                             </div>
                                             <div className="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm flex items-center justify-between">
                                                 <div>
-                                                    <p className="text-sm font-bold text-gray-400">GST Paid (18%)</p>
-                                                    <p className="text-2xl font-black text-gray-900 mt-1">₹{(myBookings.filter(b => b.status === 'completed').reduce((s,b) => s + (b.totalPrice||0), 0) * 0.18).toFixed(0)}</p>
+                                                    <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">GST (18%)</p>
+                                                    <p className="text-2xl font-black text-gray-900 mt-1">₹{(totalSpent * 0.18 + totalGstOnEarnings).toFixed(0)}</p>
+                                                    <p className="text-[8px] text-gray-400 font-bold mt-1">Includes Spent & Earned GST</p>
                                                 </div>
-                                                <div className="w-12 h-12 rounded-xl bg-blue-50 flex items-center justify-center text-xl">🧾</div>
+                                                <div className="w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center text-lg">🧾</div>
+                                            </div>
+                                            <div className="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm flex items-center justify-between">
+                                                <div>
+                                                    <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Comm. (5%)</p>
+                                                    <p className="text-2xl font-black text-orange-600 mt-1">₹{platformCommission.toFixed(0)}</p>
+                                                </div>
+                                                <div className="w-10 h-10 rounded-xl bg-orange-50 flex items-center justify-center text-lg">🏢</div>
                                             </div>
                                             <div className="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm flex items-center justify-between border-b-4 border-b-green-500">
                                                 <div>
-                                                    <p className="text-sm font-bold text-gray-400">Total Earnings</p>
-                                                    <p className="text-2xl font-black text-green-600 mt-1">₹{totalEarnings}</p>
+                                                    <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Net Profit</p>
+                                                    <p className="text-2xl font-black text-green-600 mt-1">₹{netOwnerProfit.toFixed(0)}</p>
+                                                    <p className="text-[8px] text-gray-400 font-bold mt-1">After GST & Commission</p>
                                                 </div>
-                                                <div className="w-12 h-12 rounded-xl bg-green-50 flex items-center justify-center text-xl">💰</div>
+                                                <div className="w-10 h-10 rounded-xl bg-green-50 flex items-center justify-center text-lg">💰</div>
                                             </div>
                                         </div>
 
@@ -1031,34 +1050,48 @@ const Dashboard = () => {
                                                 </div>
                                             ) : (
                                                 <div className="divide-y divide-gray-100">
-                                                    {myBookings.filter(b => b.status === "completed").map(b => (
-                                                        <div key={b.id} className="p-4 flex flex-col sm:flex-row items-center justify-between gap-4 hover:bg-gray-50 transition">
-                                                            <div className="flex items-center gap-4">
-                                                                <div className="w-12 h-12 rounded-xl bg-green-50 text-green-600 flex items-center justify-center text-lg">🚜</div>
-                                                                <div>
-                                                                    <p className="font-bold text-gray-900 text-sm">{b.equipmentName}</p>
-                                                                    <p className="text-xs text-gray-500 mt-0.5">Txn ID: {b.id.substring(1, 9)} • {b.createdAt ? format(new Date(b.createdAt), "MMM dd, yyyy") : "N/A"}</p>
+                                                    {[...myBookings, ...ownerBookings]
+                                                        .filter(b => b.status === "completed")
+                                                        .sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0))
+                                                        .map(b => {
+                                                            const isEarning = b.ownerId === authUser.uid;
+                                                            return (
+                                                                <div key={b.id} className="p-4 flex flex-col sm:flex-row items-center justify-between gap-4 hover:bg-gray-50 transition">
+                                                                    <div className="flex items-center gap-4">
+                                                                        <div className={`w-12 h-12 rounded-xl flex items-center justify-center text-lg ${isEarning ? "bg-green-50 text-green-600" : "bg-blue-50 text-blue-600"}`}>
+                                                                            {isEarning ? "💰" : "🚜"}
+                                                                        </div>
+                                                                        <div>
+                                                                            <p className="font-bold text-gray-900 text-sm">
+                                                                                {isEarning ? `Earning: ${b.equipmentName}` : `Booking: ${b.equipmentName}`}
+                                                                            </p>
+                                                                            <p className="text-xs text-gray-500 mt-0.5">Txn ID: {b.id.substring(1, 9)} • {b.createdAt ? format(new Date(b.createdAt), "MMM dd, yyyy") : "N/A"}</p>
+                                                                        </div>
+                                                                    </div>
+                                                                    <div className="flex items-center gap-6">
+                                                                        <div className="text-right">
+                                                                            <p className={`font-black ${isEarning ? "text-green-600" : "text-gray-900"}`}>
+                                                                                {isEarning ? `+₹${(b.totalPrice - (b.totalPrice * 0.18) - (b.totalPrice * 0.05)).toFixed(0)}` : `₹${b.totalPrice}`}
+                                                                            </p>
+                                                                            <p className="text-[10px] text-gray-400 font-bold">
+                                                                                {isEarning ? "Net after Tax & Comm." : `Incl. ₹${(b.totalPrice * 0.18).toFixed(0)} GST`}
+                                                                            </p>
+                                                                        </div>
+                                                                        <button 
+                                                                            onClick={() => {
+                                                                                toast.success("Generating GST Invoice PDF...");
+                                                                                generateGSTInvoice({
+                                                                                    id: b.id, price: b.totalPrice, equipmentName: b.equipmentName, duration: b.duration, createdAt: b.createdAt
+                                                                                }, { name: "AgroShare Vendor", address: "Local Hub", state: "Maharashtra", gstin: "27AABCU9603R1Z2" }, { name: user?.name, address: user?.village, state: "Maharashtra" });
+                                                                            }}
+                                                                            className="flex items-center gap-1.5 px-4 py-2 bg-gray-900 hover:bg-black text-white text-[10px] font-bold rounded-xl transition"
+                                                                        >
+                                                                            <MdDownload /> Invoice
+                                                                        </button>
+                                                                    </div>
                                                                 </div>
-                                                            </div>
-                                                            <div className="flex items-center gap-6">
-                                                                <div className="text-right">
-                                                                    <p className="font-black text-gray-900">₹{b.totalPrice}</p>
-                                                                    <p className="text-xs text-gray-400">Incl. ₹{(b.totalPrice * 0.18).toFixed(0)} GST</p>
-                                                                </div>
-                                                                <button 
-                                                                    onClick={() => {
-                                                                        toast.success("Generating GST Invoice PDF...");
-                                                                        generateGSTInvoice({
-                                                                            id: b.id, price: b.totalPrice, equipmentName: b.equipmentName, duration: b.duration, createdAt: b.createdAt
-                                                                        }, { name: "AgroShare Vendor", address: "Local Hub", state: "Maharashtra", gstin: "27AABCU9603R1Z2" }, { name: user?.name, address: user?.village, state: "Maharashtra" });
-                                                                    }}
-                                                                    className="flex items-center gap-1.5 px-4 py-2 bg-gray-900 hover:bg-black text-white text-xs font-bold rounded-xl transition"
-                                                                >
-                                                                    <MdDownload /> Download PDF
-                                                                </button>
-                                                            </div>
-                                                        </div>
-                                                    ))}
+                                                            );
+                                                        })}
                                                 </div>
                                             )}
                                         </div>

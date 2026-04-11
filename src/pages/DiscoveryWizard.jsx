@@ -370,9 +370,9 @@ const DiscoveryWizard = () => {
                                 index={i} 
                                 state={{ dates }}
                             />
-                            <div className="absolute bottom-6 right-6 z-10">
-                                <span className="px-3 py-1 bg-green-500 text-white text-[10px] font-bold rounded-full border-2 border-white shadow-sm flex items-center gap-1">
-                                    <MdCheckCircle /> Available
+                            <div className="absolute top-[52px] right-3 z-10 transition-transform group-hover:scale-105">
+                                <span className="px-2 py-0.5 bg-emerald-500 text-white text-[9px] font-black uppercase tracking-widest rounded-full border border-white/20 shadow-lg flex items-center gap-1">
+                                    <MdCheckCircle size={10} /> Available
                                 </span>
                             </div>
                         </div>
