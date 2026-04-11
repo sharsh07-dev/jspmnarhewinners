@@ -13,6 +13,21 @@ import {
     LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, AreaChart, Area,
     BarChart, Bar, Cell
 } from 'recharts';
+import { MapContainer, TileLayer, Marker, Popup, Circle } from 'react-leaflet';
+import 'leaflet/dist/leaflet.css';
+import L from 'leaflet';
+
+// Fix Leaflet icon issue
+import markerIcon from 'leaflet/dist/images/marker-icon.png';
+import markerShadow from 'leaflet/dist/images/marker-shadow.png';
+
+let DefaultIcon = L.icon({
+    iconUrl: markerIcon,
+    shadowUrl: markerShadow,
+    iconSize: [25, 41],
+    iconAnchor: [12, 41]
+});
+L.Marker.prototype.options.icon = DefaultIcon;
 
 const FarmMonitoring = () => {
     const { user } = useAuthStore();
@@ -204,6 +219,39 @@ const FarmMonitoring = () => {
                         <h3 className="text-3xl font-black text-gray-900">{monitorData.motorStatus ? '0.8' : '0.0'} L/m</h3>
                     </motion.div>
                 </div>
+
+                {/* Farm Geolocation Map */}
+                <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="bg-white p-2 rounded-[40px] border border-gray-100 shadow-xl overflow-hidden relative group">
+                    <div className="absolute top-6 left-6 z-[1000] bg-white/90 backdrop-blur-md px-4 py-2 rounded-2xl border border-gray-100 shadow-xl flex items-center gap-3">
+                        <div className="w-3 h-3 bg-green-500 rounded-full animate-pulse" />
+                        <div>
+                            <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest leading-none">Farm Location</p>
+                            <p className="text-xs font-black text-gray-900 mt-1">18.4422, 73.8308</p>
+                        </div>
+                    </div>
+                    
+                    <div className="h-[350px] w-full rounded-[34px] overflow-hidden border border-gray-50">
+                        <MapContainer center={[18.442292, 73.830830]} zoom={16} scrollWheelZoom={false} style={{ height: '100%', width: '100%' }}>
+                            <TileLayer
+                                attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                                url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                            />
+                            <Circle 
+                                center={[18.442292, 73.830830]}
+                                radius={200}
+                                pathOptions={{ fillColor: '#10b981', fillOpacity: 0.1, color: '#10b981', weight: 1, dashArray: '5, 10' }}
+                            />
+                            <Marker position={[18.442292, 73.830830]}>
+                                <Popup>
+                                    <div className="text-center p-1">
+                                        <p className="font-black text-sm text-gray-900">AgroShare Farm Node 01</p>
+                                        <p className="text-[10px] text-gray-500 font-bold uppercase mt-1">Status: Online & Monitoring</p>
+                                    </div>
+                                </Popup>
+                            </Marker>
+                        </MapContainer>
+                    </div>
+                </motion.div>
 
                 {/* Main Dashboard Section */}
                 <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
