@@ -83,8 +83,8 @@ const AppContent = () => {
 
   return (
     <div className="flex flex-col min-h-screen font-display">
-        {/* Hide desktop Navbar on mobile when farmer is logged in — MobileNav takes over */}
-        <div className={isFarmer ? "hidden md:block" : ""}>
+        {/* On mobile: hide Navbar for farmers (MobileNav replaces it) AND for guests (they go straight to /auth) */}
+        <div className={isFarmer ? "hidden md:block" : !user ? "hidden md:block" : ""}>
             <Navbar />
         </div>
         <Sidebar />
@@ -92,7 +92,7 @@ const AppContent = () => {
         <MobileNav />
         <main className={`flex-grow transition-all duration-300 w-full overflow-x-hidden ${user ? (isSidebarCollapsed ? "md:pl-16" : "md:pl-56") + " pb-24 md:pb-0" : ""} ${(!user && isHome) ? "" : isFarmer ? "md:pt-[68px]" : "pt-[68px]"}`}>
           <Routes>
-            <Route path="/" element={!user ? <HomePage /> : (user.role?.toLowerCase() === 'farmer' ? <Navigate to="/mobile" replace /> : <Navigate to={`/${user.role?.toLowerCase()}`} replace />)} />
+            <Route path="/" element={!user ? (window.innerWidth < 768 ? <Navigate to="/auth" replace /> : <HomePage />) : (user.role?.toLowerCase() === 'farmer' ? <Navigate to="/mobile" replace /> : <Navigate to={`/${user.role?.toLowerCase()}`} replace />)} />
             <Route path="/mobile" element={isFarmer ? <MobileHome /> : <Navigate to="/" replace />} />
             <Route path="/equipment" element={(!user || user?.role?.toLowerCase() === "farmer") ? <DiscoveryWizard /> : <Navigate to="/" replace />} />
             <Route path="/equipment/:id" element={(!user || user?.role?.toLowerCase() === "farmer") ? <EquipmentDetail /> : <Navigate to="/" replace />} />
