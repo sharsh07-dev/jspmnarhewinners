@@ -55,6 +55,7 @@ const Sidebar = () => {
         { to: "/mandi-advisor", icon: <MdSmartToy />, label: "Mandi Bot", badge: "HOT" },
         { to: "/farm-monitoring", icon: <MdSensors />, label: "Farm Monitor" },
         { to: "/cold-chain", icon: <MdAcUnit />, label: "Cold Storage", badge: "SAFE" },
+        { to: "/legal-advisor", icon: <MdGavel />, label: "Legal Advisor", badge: "AI" },
         { to: "/pesticide-exchange", icon: <MdSwapHorizontalCircle />, label: "Pesticide Exchange" },
         { to: "/mandi-prices", icon: <MdTrendingUp />, label: "Mandi Prices" },
         { to: "/find-labour", icon: <MdPeople />, label: "Find Labour", badge: "NEW" },

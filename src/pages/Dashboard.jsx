@@ -16,7 +16,7 @@ import {
     MdNotifications, MdAccessTime, MdShoppingCart,
     MdPhone, MdMessage, MdInbox, MdDone, MdReceipt, MdDownload, MdLightbulb,
     MdReportProblem, MdVideoCall, MdVerifiedUser, MdHistoryEdu, MdPeople, MdChat, MdCheck, MdDoubleArrow,
-    MdSmartToy, MdAcUnit, MdLocalFlorist, MdStar, MdAttachMoney
+    MdSmartToy, MdAcUnit, MdLocalFlorist, MdStar, MdAttachMoney, MdGavel
 } from "react-icons/md";
 import { generateGSTInvoice } from "../utils/invoiceGenerator";
 import DamageReportModal from "../components/DamageReportModal";
@@ -336,6 +336,19 @@ const Dashboard = () => {
                                                     <div>
                                                         <h4 className="font-black text-gray-900 leading-tight">ML Disease Scanner</h4>
                                                         <p className="text-xs text-gray-400 font-medium mt-1">Detect crop pathology using Llama 4 Vision ML.</p>
+                                                    </div>
+                                                </button>
+
+                                                <button 
+                                                    onClick={() => navigate('/legal-advisor')}
+                                                    className="bg-white p-6 rounded-[32px] border border-gray-100 shadow-sm hover:shadow-md transition-all text-left flex items-center gap-5 group"
+                                                >
+                                                    <div className="w-14 h-14 bg-orange-50 text-orange-600 rounded-2xl flex items-center justify-center text-3xl transition-transform group-hover:scale-110">
+                                                        <MdGavel />
+                                                    </div>
+                                                    <div>
+                                                        <h4 className="font-black text-gray-900 leading-tight">Legal Protection Advisor</h4>
+                                                        <p className="text-xs text-gray-400 font-medium mt-1">Protect your farm. AI analysis of contracts & agreements.</p>
                                                     </div>
                                                 </button>
                                             </div>
