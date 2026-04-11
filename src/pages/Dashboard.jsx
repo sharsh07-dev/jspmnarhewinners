@@ -16,7 +16,7 @@ import {
     MdNotifications, MdAccessTime, MdShoppingCart,
     MdPhone, MdMessage, MdInbox, MdDone, MdReceipt, MdDownload, MdLightbulb,
     MdReportProblem, MdVideoCall, MdVerifiedUser, MdHistoryEdu, MdPeople, MdChat, MdCheck, MdDoubleArrow,
-    MdSmartToy, MdAcUnit, MdLocalFlorist, MdStar, MdAttachMoney, MdGavel
+    MdSmartToy, MdAcUnit, MdLocalFlorist, MdStar, MdAttachMoney, MdGavel, MdAnalytics
 } from "react-icons/md";
 import { generateGSTInvoice } from "../utils/invoiceGenerator";
 import DamageReportModal from "../components/DamageReportModal";
@@ -343,12 +343,12 @@ const Dashboard = () => {
                                                     onClick={() => navigate('/legal-advisor')}
                                                     className="bg-white p-6 rounded-[32px] border border-gray-100 shadow-sm hover:shadow-md transition-all text-left flex items-center gap-5 group"
                                                 >
-                                                    <div className="w-14 h-14 bg-orange-50 text-orange-600 rounded-2xl flex items-center justify-center text-3xl transition-transform group-hover:scale-110">
-                                                        <MdGavel />
+                                                    <div className="w-14 h-14 bg-indigo-50 text-indigo-600 rounded-2xl flex items-center justify-center text-3xl transition-transform group-hover:scale-110">
+                                                        <MdAnalytics />
                                                     </div>
                                                     <div>
-                                                        <h4 className="font-black text-gray-900 leading-tight">Legal Protection Advisor</h4>
-                                                        <p className="text-xs text-gray-400 font-medium mt-1">Protect your farm. AI analysis of contracts & agreements.</p>
+                                                        <h4 className="font-black text-gray-900 leading-tight">Profit & Risk Analyzer</h4>
+                                                        <p className="text-xs text-gray-400 font-medium mt-1">Grok-powered insights. Extract profit, loss & risk from any document.</p>
                                                     </div>
                                                 </button>
                                             </div>
