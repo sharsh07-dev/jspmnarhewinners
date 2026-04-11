@@ -36,12 +36,42 @@ const EquipmentDamageAudit = () => {
             // Notify Owner
             const claim = claims.find(c => c.id === claimId);
             if (claim) {
+                let finalMsg = message;
+                if (newStatus === 'processed') {
+                    finalMsg = "Compensation of ₹" + (claim.estimatedCost?.toLocaleString()) + " has been authorized. It will be credited to your linked bank account in 5-7 working days by our team. 🏦";
+                } else if (newStatus === 'verified') {
+                    finalMsg = "Your claim is verified. Grok AI is initializing the payout request. Expected credit: 5-7 working days.";
+                }
+
                 await push(ref(db, `notifications/${claim.ownerId}`), {
                     type: "claim_update",
-                    message: `Your damage claim ${claimId} has been ${newStatus}. ${message || ""}`,
+                    message: `Claim ${claimId} ${newStatus}: ${finalMsg}`,
                     createdAt: new Date().toISOString(),
                     read: false
                 });
+
+                // Rating Deduction for Renter (the one who borrowed)
+                if (newStatus === 'verified' && claim.renterId) {
+                    const renterRef = ref(db, `users/${claim.renterId}`);
+                    onValue(renterRef, (snap) => {
+                        const user = snap.val();
+                        if (user && !claim.ratingDeducted) {
+                            const currentRating = user.rating || 5.0;
+                            const penalty = (parseInt(claim.aiAssessment?.damagePercentage) || 10) / 20; // 40% damage = 2.0 penalty
+                            const newRating = Math.max(1, currentRating - penalty).toFixed(1);
+                            update(renterRef, { rating: Number(newRating) });
+                            update(ref(db, `damage_claims/${claimId}`), { ratingDeducted: true });
+                            
+                            // Notify Renter of penalty
+                            push(ref(db, `notifications/${claim.renterId}`), {
+                                type: "trust_warning",
+                                message: `Trust Index Alert: Your rating dropped to ${newRating} due to verified equipment damage (Case #${claimId.split('-')[1]}).`,
+                                createdAt: new Date().toISOString(),
+                                read: false
+                            });
+                        }
+                    }, { onlyOnce: true });
+                }
             }
             
             toast.success(`Claim ${newStatus}`);

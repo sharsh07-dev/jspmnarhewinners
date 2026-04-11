@@ -255,9 +255,9 @@ const DamageReportModal = ({ booking, onClose }) => {
                             <div className="bg-gray-50 rounded-[32px] p-8 space-y-6 border border-gray-100">
                                 {[
                                     { label: "AI Discrepancy Logged", status: "completed", t: "14:22 PM", icon: <MdSecurity /> },
-                                    { label: "AI Verification Underway", status: claimStatus === "reported" ? "current" : "completed", t: "Scanning Proof...", icon: <MdRecordVoiceOver /> },
-                                    { label: "Final Authorization", status: claimStatus === "verified" ? "current" : (claimStatus === "processed" ? "completed" : "pending"), t: "Est 2 hours", icon: <MdVerifiedUser /> },
-                                    { label: "Compensation Disbursed", status: claimStatus === "processed" ? "completed" : "pending", t: "To Bank A/C", icon: <MdPayment /> },
+                                    { label: "AI Verification Complete", status: claimStatus === "reported" ? "current" : "completed", t: claimStatus === "reported" ? "Scanning Proof..." : "Verified by Grok", icon: <MdRecordVoiceOver /> },
+                                    { label: "Final Authorization", status: claimStatus === "verified" ? "current" : (claimStatus === "processed" || claimStatus === "credited" ? "completed" : "pending"), t: claimStatus === "verified" ? "Auth Pending" : "Admin Approved", icon: <MdVerifiedUser /> },
+                                    { label: "Compensation Disbursed", status: claimStatus === "processed" || claimStatus === "credited" ? "completed" : "pending", t: "Credit in 5-7 working days", icon: <MdPayment /> },
                                 ].map((s, idx) => (
                                     <div key={idx} className="flex items-start gap-5 relative">
                                         {idx < 3 && <div className={`absolute left-4 top-10 w-0.5 h-10 ${s.status === 'completed' ? 'bg-green-500' : 'bg-gray-200'}`} />}
@@ -273,6 +273,14 @@ const DamageReportModal = ({ booking, onClose }) => {
                                         </div>
                                     </div>
                                 ))}
+                            </div>
+
+                            <div className="bg-amber-50 rounded-2xl p-5 border border-amber-100 flex items-center gap-4">
+                                <div className="text-2xl">🏦</div>
+                                <div className="flex-1">
+                                    <p className="text-[10px] font-black text-amber-600 uppercase tracking-widest leading-none">Credit Timeline Notification</p>
+                                    <p className="text-xs font-bold text-gray-700 mt-1">Once authorized, your compensation will be credited in 5-7 working days by our team.</p>
+                                </div>
                             </div>
 
                             <button onClick={onClose} className="w-full py-5 bg-gray-900 text-white rounded-[24px] font-black text-lg shadow-xl shadow-gray-200 hover:bg-black transition-all">
