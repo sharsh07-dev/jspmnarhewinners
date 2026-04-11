@@ -216,5 +216,29 @@ export const generateGSTInvoice = (transaction, seller, buyer) => {
     doc.text(`For ${seller.name || "AgroShare Vendor"}`, 195, 252, { align: "right" });
     doc.text("Authorized Signatory", 195, 274, { align: "right" });
 
-    doc.save(`AgroShare_Invoice_${transaction.id || Date.now()}.pdf`);
+    // ── Generate & Download ──────────────────────────────────────────
+    const fileName = `AgroShare_Invoice_${transaction.id || Date.now()}.pdf`;
+    
+    try {
+        // Output as blob for more robust mobile download handling
+        const pdfBlob = doc.output('blob');
+        const url = URL.createObjectURL(pdfBlob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = fileName;
+        
+        // Append to body, click and remove (standard robust pattern)
+        document.body.appendChild(link);
+        link.click();
+        
+        // Cleanup
+        setTimeout(() => {
+            document.body.removeChild(link);
+            URL.revokeObjectURL(url);
+        }, 100);
+    } catch (err) {
+        console.error("Invoice generation failed:", err);
+        // Final fallback
+        doc.save(fileName);
+    }
 };
