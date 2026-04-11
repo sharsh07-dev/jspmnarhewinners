@@ -108,7 +108,7 @@ const CropClaimAudit = () => {
                                         c.admin_status === 'rejected' ? 'bg-rose-100 text-rose-700' :
                                         'bg-amber-100 text-amber-700'
                                     }`}>
-                                        {c.admin_status.replace(/_/g, " ")}
+                                        {(c.admin_status || "pending").replace(/_/g, " ")}
                                     </View>
                                 </TouchableOpacity>
                             ))}

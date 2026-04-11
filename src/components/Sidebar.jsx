@@ -6,7 +6,7 @@ import {
     MdDashboard, MdSearch, MdPsychology, MdSwapHorizontalCircle, 
     MdTrendingUp, MdGavel, MdAccountBalance, MdHelpCenter, MdPeople,
     MdChevronRight, MdMenuOpen, MdKeyboardArrowLeft, MdKeyboardArrowRight,
-    MdSmartToy, MdSensors, MdLocalFlorist, MdAcUnit, MdSatellite
+    MdSmartToy, MdSensors, MdLocalFlorist, MdAcUnit, MdSatellite, MdSecurity
 } from "react-icons/md";
 import useUIStore from "../store/useUIStore";
 
@@ -65,6 +65,7 @@ const Sidebar = () => {
     const adminLinks = [
         { to: "/admin", icon: <MdDashboard />, label: "Admin Console" },
         { to: "/audit-claims", icon: <MdSatellite />, label: "Audit Board", badge: "AI" },
+        { to: "/audit-damage", icon: <MdSecurity />, label: "Damage Audit", badge: "NEW" },
         { to: "/dashboard", icon: <MdTrendingUp />, label: "Platform Pulse" },
     ];
 

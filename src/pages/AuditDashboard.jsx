@@ -2,7 +2,7 @@ import React from "react";
 import { motion } from "framer-motion";
 import useAuthStore from "../store/useAuthStore";
 import { Navigate } from "react-router-dom";
-import { MdAccountBalance, MdAnalytics, MdDescription, MdSatellite } from "react-icons/md";
+import { MdAccountBalance, MdAnalytics, MdDescription, MdSatellite, MdReceipt } from "react-icons/md";
 import { useNavigate } from "react-router-dom";
 
 const AuditDashboard = () => {

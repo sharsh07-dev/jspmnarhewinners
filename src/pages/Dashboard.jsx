@@ -15,8 +15,8 @@ import {
     MdCheckCircle, MdHourglassEmpty, MdCancel,
     MdNotifications, MdAccessTime, MdShoppingCart,
     MdPhone, MdMessage, MdInbox, MdDone, MdReceipt, MdDownload, MdLightbulb,
-    MdReportProblem, MdVideoCall, MdVerifiedUser, MdHistoryEdu, MdPeople, MdChat, MdCheck, MdDoubleArrow,
-    MdSmartToy, MdAcUnit, MdLocalFlorist, MdStar, MdAttachMoney, MdGavel, MdAnalytics, MdSatellite
+    MdReportProblem, MdVideoCall, MdVerifiedUser, MdHistoryEdu, MdPeople, MdChat, MdCheck, MdDoubleArrow, MdSecurity,
+    MdSmartToy, MdAcUnit, MdLocalFlorist, MdStar, MdAttachMoney, MdGavel, MdAnalytics, MdSatellite, MdAccessTime
 } from "react-icons/md";
 import { generateGSTInvoice } from "../utils/invoiceGenerator";
 import DamageReportModal from "../components/DamageReportModal";
@@ -262,6 +262,12 @@ const Dashboard = () => {
         ? categorizedBookings
         : categorizedBookings.filter(b => b._category === bookingStatusTab);
 
+    // Trust Score Logic: Starts at 100, -10 per damage claim where renter was at fault
+    // For now, simple dynamic calculation based on total bookings vs claims
+    const reportedClaimsCount = ownerBookings.filter(b => b.damageReported).length;
+    const trustScore = Math.max(0, 100 - (reportedClaimsCount * 5));
+    const isTrusted = trustScore >= 95 && myBookings.length > 2;
+
     return (
         <div className="min-h-screen bg-gray-50 pt-20">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -273,7 +279,20 @@ const Dashboard = () => {
                             <div className="w-16 h-16 bg-gradient-to-br from-green-400 to-emerald-600 rounded-2xl flex items-center justify-center mx-auto mb-3 text-3xl shadow-green">👨‍🌾</div>
                             <p className="font-bold text-gray-900">{user?.name}</p>
                             <p className="text-sm text-gray-500 capitalize">{user?.role} · {user?.village}</p>
-                            <span className="badge badge-green mt-2">✓ Verified</span>
+                            <div className="mt-3 flex flex-col items-center gap-2">
+                                <div className="w-full bg-gray-100 h-1.5 rounded-full overflow-hidden">
+                                    <div className="bg-green-500 h-full transition-all duration-1000" style={{ width: `${trustScore}%` }} />
+                                </div>
+                                <div className="flex items-center gap-1">
+                                    <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Trust Index:</span>
+                                    <span className="text-xs font-black text-green-600">{trustScore}%</span>
+                                </div>
+                                {isTrusted && (
+                                    <span className="flex items-center gap-1 px-2 py-0.5 bg-indigo-50 text-indigo-600 text-[10px] font-black uppercase rounded-lg border border-indigo-100">
+                                        <MdCheckCircle className="text-xs" /> Trusted User
+                                    </span>
+                                )}
+                            </div>
                         </div>
 
                         <nav className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
@@ -465,21 +484,21 @@ const Dashboard = () => {
                                                 </div>
                                             </div>
 
-                                            {/* Crop Claims Quick Access */}
-                                            <div className="bg-gradient-to-br from-emerald-900 to-teal-900 rounded-2xl p-5 border border-teal-800 shadow-sm relative overflow-hidden group">
-                                                <div className="absolute top-0 right-0 w-32 h-32 blur-[60px] rounded-full bg-emerald-500/20 group-hover:bg-emerald-400/30 transition-colors" />
+                                            {/* Damage Fund Quick Access */}
+                                            <div className="bg-gradient-to-br from-red-900 to-rose-950 rounded-2xl p-5 border border-rose-900 shadow-sm relative overflow-hidden group">
+                                                <div className="absolute top-0 right-0 w-32 h-32 blur-[60px] rounded-full bg-rose-500/20 group-hover:bg-rose-400/30 transition-colors" />
                                                 <div className="relative z-10 flex flex-col h-full">
                                                     <div className="flex justify-between items-start mb-4">
-                                                        <div className="w-10 h-10 bg-white/10 rounded-xl flex items-center justify-center text-emerald-300">
-                                                            <MdSatellite size={20} />
+                                                        <div className="w-10 h-10 bg-white/10 rounded-xl flex items-center justify-center text-rose-300">
+                                                            <MdSecurity size={20} />
                                                         </div>
-                                                        <span className="text-[10px] font-black text-emerald-300 uppercase tracking-widest px-2 py-0.5 bg-white/5 rounded-full border border-white/10">Space-Grade Audit</span>
+                                                        <span className="text-[10px] font-black text-rose-300 uppercase tracking-widest px-2 py-0.5 bg-white/5 rounded-full border border-white/10">Active Protection</span>
                                                     </div>
-                                                    <h3 className="font-bold text-white text-lg">Forensic Claim Portal</h3>
-                                                    <p className="text-emerald-200/70 text-xs font-medium mt-1 mb-4">File satellite-verified insurance claims for crop damage instantly.</p>
-                                                    <a href="/crop-claims" className="mt-auto inline-flex items-center gap-2 text-xs font-bold text-white uppercase tracking-widest hover:text-emerald-300 transition-colors">
-                                                        File Claim Now <MdDoubleArrow />
-                                                    </a>
+                                                    <h3 className="font-bold text-white text-lg">Damage Protection Fund</h3>
+                                                    <p className="text-rose-200/70 text-xs font-medium mt-1 mb-4">Platform-backed coverage for all rental sessions. Claims are verified live via xAI.</p>
+                                                    <button onClick={() => setTab("bookings")} className="mt-auto inline-flex items-center gap-2 text-xs font-bold text-white uppercase tracking-widest hover:text-rose-300 transition-colors">
+                                                        View Active Claims <MdDoubleArrow />
+                                                    </button>
                                                 </div>
                                             </div>
                                         </div>
