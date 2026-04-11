@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import useAuthStore from "../store/useAuthStore";
 import { db } from "../firebase";
@@ -16,7 +16,7 @@ import {
     MdNotifications, MdAccessTime, MdShoppingCart,
     MdPhone, MdMessage, MdInbox, MdDone, MdReceipt, MdDownload, MdLightbulb,
     MdReportProblem, MdVideoCall, MdVerifiedUser, MdHistoryEdu, MdPeople, MdChat, MdCheck, MdDoubleArrow,
-    MdSmartToy, MdAcUnit, MdLocalFlorist
+    MdSmartToy, MdAcUnit, MdLocalFlorist, MdStar, MdAttachMoney
 } from "react-icons/md";
 import { generateGSTInvoice } from "../utils/invoiceGenerator";
 import DamageReportModal from "../components/DamageReportModal";
