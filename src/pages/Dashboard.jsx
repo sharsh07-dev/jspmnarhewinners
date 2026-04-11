@@ -34,6 +34,7 @@ const TABS = [
     { id: "add", label: "Add Equipment", icon: <MdAddCircle /> },
     { id: "notifs", label: "Notifications", icon: <MdNotifications /> },
     { id: "claims", label: "AI Crop Claims", icon: <MdSatellite /> },
+    { id: "profile", label: "My Profile", icon: <MdPerson /> },
 ];
 
 const EQUIPMENT_TYPES = ["Tractor", "Harvester", "Sprayer", "Rotavator", "Plough", "Tools"];
@@ -70,6 +71,48 @@ const Dashboard = () => {
     const [bookingStatusTab, setBookingStatusTab] = useState("all");
     const [selectedBookingForDamage, setSelectedBookingForDamage] = useState(null);
     const [activeDamageClaims, setActiveDamageClaims] = useState([]);
+
+    // Profile editing
+    const [profileForm, setProfileForm] = useState({ name: "", phone: "", village: "", bio: "", photoUrl: "" });
+    const [profileImageFile, setProfileImageFile] = useState(null);
+    const [profileImagePreview, setProfileImagePreview] = useState(null);
+    const [savingProfile, setSavingProfile] = useState(false);
+
+    // Sync profile form with current user data
+    useEffect(() => {
+        if (user) {
+            setProfileForm({
+                name: user.name || "",
+                phone: user.phone || "",
+                village: user.village || "",
+                bio: user.bio || "",
+                photoUrl: user.photoUrl || ""
+            });
+            if (user.photoUrl) setProfileImagePreview(user.photoUrl);
+        }
+    }, [user]);
+
+    const handleProfileSave = async () => {
+        setSavingProfile(true);
+        try {
+            let photoUrl = profileForm.photoUrl;
+            if (profileImageFile) {
+                photoUrl = await compressAndUpload(profileImageFile);
+            }
+            await update(ref(db, `users/${authUser.uid}`), {
+                name: profileForm.name,
+                phone: profileForm.phone,
+                village: profileForm.village,
+                bio: profileForm.bio,
+                photoUrl
+            });
+            toast.success("Profile updated successfully! 🌾");
+        } catch (err) {
+            toast.error("Failed to save profile");
+        } finally {
+            setSavingProfile(false);
+        }
+    };
 
     // Add Equipment form
     const [form, setForm] = useState({
@@ -286,7 +329,13 @@ const Dashboard = () => {
                     {/* ─── Sidebar ─── */}
                     <aside className="lg:w-64 flex-shrink-0">
                         <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 mb-4 text-center">
-                            <div className="w-16 h-16 bg-gradient-to-br from-green-400 to-emerald-600 rounded-2xl flex items-center justify-center mx-auto mb-3 text-3xl shadow-green">👨‍🌾</div>
+                            <div className="w-16 h-16 rounded-2xl mx-auto mb-3 overflow-hidden shadow-md flex items-center justify-center bg-gradient-to-br from-green-400 to-emerald-600">
+                                {user?.photoUrl ? (
+                                    <img src={user.photoUrl} alt="Profile" className="w-full h-full object-cover" />
+                                ) : (
+                                    <span className="text-3xl">👨‍🌾</span>
+                                )}
+                            </div>
                             <p className="font-bold text-gray-900">{user?.name}</p>
                             <p className="text-sm text-gray-500 capitalize">{user?.role} · {user?.village}</p>
                             <div className="mt-3 flex flex-col items-center gap-2">
@@ -1374,6 +1423,114 @@ const Dashboard = () => {
                                                 ))}
                                             </div>
                                         )}
+                                    </div>
+                                )}
+
+                                {/* ─ MY PROFILE ─ */}
+                                {tab === "profile" && (
+                                    <div className="space-y-6">
+                                        <div className="flex items-center justify-between">
+                                            <h2 className="text-xl font-bold text-gray-900">My Profile</h2>
+                                            <span className="text-xs text-gray-400 font-bold uppercase tracking-widest">Farmer Account</span>
+                                        </div>
+
+                                        {/* Avatar Section */}
+                                        <div className="bg-white rounded-3xl border border-gray-100 shadow-sm p-8 flex flex-col items-center gap-5">
+                                            <div className="relative">
+                                                <div className="w-28 h-28 rounded-full overflow-hidden border-4 border-green-100 shadow-xl bg-gray-100 flex items-center justify-center">
+                                                    {profileImagePreview ? (
+                                                        <img src={profileImagePreview} alt="Profile" className="w-full h-full object-cover" />
+                                                    ) : (
+                                                        <span className="text-6xl">👨‍🌾</span>
+                                                    )}
+                                                </div>
+                                                <label className="absolute bottom-0 right-0 w-9 h-9 bg-green-600 rounded-full flex items-center justify-center cursor-pointer shadow-lg border-2 border-white hover:bg-green-700 transition-colors">
+                                                    <input
+                                                        type="file"
+                                                        accept="image/*"
+                                                        className="hidden"
+                                                        onChange={(e) => {
+                                                            const file = e.target.files[0];
+                                                            if (!file) return;
+                                                            setProfileImageFile(file);
+                                                            setProfileImagePreview(URL.createObjectURL(file));
+                                                        }}
+                                                    />
+                                                    <span className="text-white text-sm">📷</span>
+                                                </label>
+                                            </div>
+                                            <div className="text-center">
+                                                <p className="text-xl font-black text-gray-900">{profileForm.name || "Your Name"}</p>
+                                                <p className="text-sm text-green-600 font-bold capitalize mt-1">🌾 Farmer · {profileForm.village || "Village not set"}</p>
+                                                <p className="text-xs text-gray-400 mt-1">{user?.email || ""}</p>
+                                            </div>
+                                            <div className="w-full grid grid-cols-3 gap-3 pt-4 border-t border-gray-100">
+                                                {[
+                                                    { label: "Bookings", value: myBookings.length },
+                                                    { label: "Equipment", value: myEquipment.length },
+                                                    { label: "Trust", value: `${Math.max(0, 100 - ownerBookings.filter(b => b.damageReported).length * 5)}%` },
+                                                ].map(s => (
+                                                    <div key={s.label} className="text-center p-3 bg-gray-50 rounded-2xl">
+                                                        <p className="text-xl font-black text-gray-900">{s.value}</p>
+                                                        <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mt-0.5">{s.label}</p>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        </div>
+
+                                        {/* Edit Form */}
+                                        <div className="bg-white rounded-3xl border border-gray-100 shadow-sm p-6 space-y-5">
+                                            <h3 className="font-black text-gray-900 text-sm uppercase tracking-widest">Edit Information</h3>
+                                            <div className="space-y-1">
+                                                <label className="text-[10px] font-black text-gray-400 uppercase tracking-[0.15em]">Full Name</label>
+                                                <input
+                                                    value={profileForm.name}
+                                                    onChange={e => setProfileForm(p => ({ ...p, name: e.target.value }))}
+                                                    placeholder="Enter your full name"
+                                                    className="input-field"
+                                                />
+                                            </div>
+                                            <div className="space-y-1">
+                                                <label className="text-[10px] font-black text-gray-400 uppercase tracking-[0.15em]">Phone Number</label>
+                                                <input
+                                                    value={profileForm.phone}
+                                                    onChange={e => setProfileForm(p => ({ ...p, phone: e.target.value }))}
+                                                    placeholder="+91 XXXXX XXXXX"
+                                                    type="tel"
+                                                    className="input-field"
+                                                />
+                                            </div>
+                                            <div className="space-y-1">
+                                                <label className="text-[10px] font-black text-gray-400 uppercase tracking-[0.15em]">Village / Town</label>
+                                                <input
+                                                    value={profileForm.village}
+                                                    onChange={e => setProfileForm(p => ({ ...p, village: e.target.value }))}
+                                                    placeholder="e.g. Nashik, Kolhapur..."
+                                                    className="input-field"
+                                                />
+                                            </div>
+                                            <div className="space-y-1">
+                                                <label className="text-[10px] font-black text-gray-400 uppercase tracking-[0.15em]">Short Bio</label>
+                                                <textarea
+                                                    value={profileForm.bio}
+                                                    onChange={e => setProfileForm(p => ({ ...p, bio: e.target.value }))}
+                                                    placeholder="Tell others about your farm, crops and experience..."
+                                                    rows={3}
+                                                    className="input-field resize-none"
+                                                />
+                                            </div>
+                                            <button
+                                                onClick={handleProfileSave}
+                                                disabled={savingProfile}
+                                                className="w-full py-4 bg-gray-900 text-white rounded-2xl font-black text-sm uppercase tracking-widest shadow-xl shadow-gray-100 hover:bg-black transition-all disabled:opacity-50 flex items-center justify-center gap-3"
+                                            >
+                                                {savingProfile ? (
+                                                    <><span className="animate-spin inline-block">⏳</span> Saving...</>
+                                                ) : (
+                                                    <><MdCheckCircle className="text-green-400" /> Save Profile</>
+                                                )}
+                                            </button>
+                                        </div>
                                     </div>
                                 )}
                             </motion.div>

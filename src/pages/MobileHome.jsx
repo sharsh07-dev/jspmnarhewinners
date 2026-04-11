@@ -105,14 +105,19 @@ const MobileHome = () => {
                             )}
                         </button>
                         <button
-                            onClick={handleLogout}
+                            onClick={() => navigate("/dashboard")}
                             style={{
-                                width: 42, height: 42, borderRadius: 14, background: "#fff1f1",
+                                width: 42, height: 42, borderRadius: "50%", border: "2px solid #d1fae5",
+                                overflow: "hidden", background: "#d1fae5",
                                 display: "flex", alignItems: "center", justifyContent: "center",
-                                fontSize: 18, border: "none"
+                                fontSize: 20, cursor: "pointer", padding: 0
                             }}
                         >
-                            🚪
+                            {user?.photoUrl ? (
+                                <img src={user.photoUrl} alt="profile" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                            ) : (
+                                "👨‍🌾"
+                            )}
                         </button>
                     </div>
                 </div>
