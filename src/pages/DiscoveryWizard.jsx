@@ -82,7 +82,7 @@ const DiscoveryWizard = () => {
             toast.success(`Located: ${address.split(",")[0]}`);
             setStep(2); // Auto-advance to calendar
         } catch (err) {
-            toast.error("GPS failed. Please search manually below.");
+            toast.error(err.message || "GPS failed. Please search manually below.");
         } finally {
             setLocLoading(false);
         }

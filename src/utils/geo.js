@@ -18,18 +18,34 @@ export const getUserLocation = () =>
             return;
         }
 
-        navigator.geolocation.getCurrentPosition(
-            (p) => resolve({ lat: p.coords.latitude, lng: p.coords.longitude }),
-            (err) => {
-                console.error("Geolocation Error:", err);
-                reject(err);
-            },
-            { 
-                enableHighAccuracy: true, 
-                timeout: 15000, // 15 seconds for mobile GPS
-                maximumAge: 1000 * 60 * 5 // Accept cached location up to 5 minutes old
-            }
-        );
+        // Browsers block geolocation on non-HTTPS sites (except localhost)
+        if (!window.isSecureContext && window.location.hostname !== "localhost") {
+            reject(new Error("Geolocation requires a secure (HTTPS) connection. Please check your URL."));
+            return;
+        }
+
+        const options = {
+            enableHighAccuracy: true,
+            timeout: 10000,      // Try high accuracy for 10s
+            maximumAge: 1000 * 60 * 2 // 2 minute cache
+        };
+
+        const success = (p) => resolve({ lat: p.coords.latitude, lng: p.coords.longitude });
+        
+        const error = (err) => {
+            console.warn(`GPS High Accuracy failed (Error ${err.code}). Trying fallback...`);
+            // Fallback to coarse location (faster, works better indoors/low signal)
+            navigator.geolocation.getCurrentPosition(
+                success,
+                (err2) => {
+                    console.error("Geolocation Fallback Error:", err2);
+                    reject(err2);
+                },
+                { enableHighAccuracy: false, timeout: 10000, maximumAge: 1000 * 60 * 5 }
+            );
+        };
+
+        navigator.geolocation.getCurrentPosition(success, error, options);
     });
 
 // ── Reverse geocode coordinates → human-readable address ─────────────
