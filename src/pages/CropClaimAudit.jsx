@@ -97,7 +97,7 @@ const CropClaimAudit = () => {
                                 <TouchableOpacity 
                                     key={c.id} 
                                     onPress={() => handleSelectClaim(c.id)}
-                                    className={`p-6 hover:bg-slate-50 transition-colors flex-row items-center justify-between ${selectedClaim?.claim_id === c.id ? 'bg-emerald-50 border-l-4 border-emerald-500' : ''}`}
+                                    className={`p-6 hover:bg-slate-50 transition-colors flex-row items-center justify-between ${selectedClaim?.claim?.claim_id === c.id ? 'bg-emerald-50 border-l-4 border-emerald-500' : ''}`}
                                 >
                                     <View className="space-y-1">
                                         <Text className="font-black text-slate-800 tracking-tight">{c.farmer_name}</Text>
@@ -137,18 +137,18 @@ const CropClaimAudit = () => {
                                                 <Text className="text-3xl font-black tracking-tighter">AI Analysis Packet</Text>
                                             </View>
                                             <View className="bg-white/10 px-4 py-2 rounded-2xl border border-white/10">
-                                                <Text className="text-lg font-black text-emerald-400">#CF-{selectedClaim.claim_id}</Text>
+                                                <Text className="text-lg font-black text-emerald-400">#CF-{selectedClaim.claim.claim_id}</Text>
                                             </View>
                                         </View>
 
                                         <View className="grid grid-cols-2 md:grid-cols-4 gap-4">
                                             <View className="bg-white/5 p-4 rounded-3xl border border-white/10 text-center">
                                                 <Text className="text-[9px] font-bold text-slate-500 uppercase">Damage %</Text>
-                                                <Text className="text-2xl font-black text-orange-400">{selectedClaim.latest_damage_percentage?.toFixed(1) || "0.0"}%</Text>
+                                                <Text className="text-2xl font-black text-orange-400">{selectedClaim.claim.latest_damage_percentage?.toFixed(1) || "0.0"}%</Text>
                                             </View>
                                             <View className="bg-white/5 p-4 rounded-3xl border border-white/10 text-center">
                                                 <Text className="text-[9px] font-bold text-slate-500 uppercase">AI Prob</Text>
-                                                <Text className="text-2xl font-black text-indigo-400">{selectedClaim.latest_ai_damage_probability?.toFixed(2) || "0.00"}</Text>
+                                                <Text className="text-2xl font-black text-indigo-400">{selectedClaim.claim.latest_ai_damage_probability?.toFixed(2) || "0.00"}</Text>
                                             </View>
                                             <View className="bg-white/5 p-4 rounded-3xl border border-white/10 text-center">
                                                 <Text className="text-[9px] font-bold text-slate-500 uppercase">NDVI Before</Text>

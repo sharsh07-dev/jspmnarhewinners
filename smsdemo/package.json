@@ -1,0 +1,36 @@
+{
+  "name": "email-otp-auth-service",
+  "version": "1.0.0",
+  "description": "Production-ready Email OTP Authentication Service with Node.js, Express, and Gmail SMTP.",
+  "main": "server.js",
+  "type": "module",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "nodemon server.js",
+    "lint": "echo \"No lint configured yet\""
+  },
+  "keywords": [
+    "otp",
+    "authentication",
+    "express",
+    "nodemailer",
+    "jwt",
+    "redis"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "cors": "^2.8.5",
+    "dotenv": "^16.3.1",
+    "express": "^4.18.2",
+    "helmet": "^7.0.0",
+    "joi": "^17.9.2",
+    "jsonwebtoken": "^9.0.2",
+    "morgan": "^1.10.0",
+    "nodemailer": "^6.9.4",
+    "redis": "^5.11.0"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.1"
+  }
+}

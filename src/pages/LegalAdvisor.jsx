@@ -155,14 +155,14 @@ const LegalAdvisor = () => {
                 {/* Brand Header */}
                 <div className="text-center mb-12">
                     <div className="inline-flex items-center gap-2 px-4 py-1.5 bg-indigo-600 text-white rounded-full text-[10px] font-black uppercase tracking-widest mb-4 shadow-lg">
-                        <MdAnalytics /> AGRO INTELLIGENCE · GROK AI PIPELINE
+                        <MdGavel /> AGRO INTELLIGENCE · LEGAL OVERSIGHT
                     </div>
                     <h1 className="text-5xl font-black text-gray-900 tracking-tighter mb-4 font-display">
-                        Farmer Profit & <span className="text-indigo-600">Risk Analyzer</span>
+                        AI <span className="text-indigo-600">Legal Advisor</span>
                     </h1>
                     <p className="text-gray-500 font-medium max-w-2xl mx-auto leading-relaxed">
-                        Transform complex legal documents into clear profit-loss insights. 
-                        Make safe and informed decisions before signing anything.
+                        Transform complex legal documents and gazettes into clear, actionable advice. 
+                        Make safe and informed decisions before signing farm contracts.
                     </p>
                 </div>
 

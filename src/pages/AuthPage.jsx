@@ -10,6 +10,9 @@ import { motion, AnimatePresence } from "framer-motion";
 import { FaTractor } from "react-icons/fa";
 import { MdEmail, MdLock, MdPerson, MdPhone, MdLocationOn, MdVisibility, MdVisibilityOff, MdFingerprint, MdArrowBack } from "react-icons/md";
 import toast from "react-hot-toast";
+import axios from "axios";
+
+const OTP_SERVICE_URL = "http://localhost:3001/auth";
 
 const AuthPage = () => {
     const location = useLocation();
@@ -41,6 +44,11 @@ const AuthPage = () => {
     const [otpStep, setOtpStep] = useState(1); // 1: input phone, 2: verify OTP
     const [otp, setOtp] = useState("");
     const [generatedOtp, setGeneratedOtp] = useState("");
+    
+    // Email OTP fields
+    const [emailOtpStep, setEmailOtpStep] = useState(1); // 1: input email, 2: verify OTP
+    const [emailOtp, setEmailOtp] = useState("");
+    const [isEmailVerified, setIsEmailVerified] = useState(false);
     
     const navigate = useNavigate();
 
@@ -76,11 +84,35 @@ const AuthPage = () => {
         return "/dashboard";
     };
 
-    // --- EMAIL LOGIN LOGIC ---
+    // --- EMAIL LOGIN LOGIC (Integrated with Node.js OTP Service) ---
+    const handleSendEmailOtp = async (e) => {
+        if (e) e.preventDefault();
+        if (!email.includes('@')) return toast.error("Enter a valid email address");
+        
+        setLoading(true);
+        try {
+            await axios.post(`${OTP_SERVICE_URL}/send-otp`, { email });
+            setEmailOtpStep(2);
+            toast.success("Verification code sent to your Gmail! 📧", { icon: '📨' });
+        } catch (err) {
+            toast.error(err.response?.data?.message || "Failed to send OTP. Check if the microservice is running.");
+        } finally {
+            setLoading(false);
+        }
+    };
+
     const handleEmailSubmit = async (e) => {
         e.preventDefault();
         setLoading(true);
+        
         try {
+            // Step 1: Verify OTP only if not already verified
+            if (!isEmailVerified) {
+                await axios.post(`${OTP_SERVICE_URL}/verify-otp`, { email, otp: emailOtp });
+                setIsEmailVerified(true);
+            }
+            
+            // Step 2: Proceed with Firebase Auth
             let userRole = role;
             if (mode === "login") {
                 const creds = await signInWithEmailAndPassword(auth, email, password);
@@ -89,7 +121,7 @@ const AuthPage = () => {
                     const dbRole = snap.val().role?.toLowerCase();
                     const selectedRole = role.toLowerCase();
                     if (dbRole && dbRole !== selectedRole) {
-                        toast.error(`Access Denied: This account is registered as ${dbRole}. Please select the ${dbRole} portal.`, { icon: "🚫" });
+                        toast.error(`Access Denied: Account role mismatch.`, { icon: "🚫" });
                         setLoading(false);
                         return;
                     }
@@ -105,7 +137,14 @@ const AuthPage = () => {
                 processSuccessfulLogin(user.uid, userRole, email, name, password);
             }
         } catch (err) {
-            toast.error(err.message || "Failed to authenticate.");
+            console.error("Auth error:", err);
+            let msg = err.response?.data?.message || err.message;
+            if (msg.includes("auth/wrong-password") || msg.includes("invalid-credential")) {
+                msg = "Incorrect password. Please go back and check your credentials.";
+            } else if (msg.includes("OTP is invalid")) {
+                msg = "Invalid verification code. Please check your Gmail again.";
+            }
+            toast.error(msg, { duration: 5000 });
         } finally {
             setLoading(false);
         }
@@ -355,29 +394,48 @@ const AuthPage = () => {
                     ) : (
                         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-4">
                              {renderRoleSelector()}
-                            <form onSubmit={handleEmailSubmit} className="space-y-4">
-                                {mode === "signup" && (
-                                    <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} className="space-y-4 overflow-hidden">
+                            <form onSubmit={emailOtpStep === 1 ? handleSendEmailOtp : handleEmailSubmit} className="space-y-4">
+                                {emailOtpStep === 1 ? (
+                                    <>
+                                        {mode === "signup" && (
+                                            <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} className="space-y-4 overflow-hidden">
+                                                <div className="relative">
+                                                    <MdPerson className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 h-5 w-5" />
+                                                    <input required value={name} onChange={(e) => setName(e.target.value)} type="text" placeholder="Full Name" className="w-full bg-white border border-gray-200 text-gray-900 text-sm rounded-2xl focus:ring-green-500 focus:border-green-500 block p-3.5 pl-11 shadow-sm" />
+                                                </div>
+                                            </motion.div>
+                                        )}
                                         <div className="relative">
-                                            <MdPerson className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 h-5 w-5" />
-                                            <input required value={name} onChange={(e) => setName(e.target.value)} type="text" placeholder="Full Name" className="w-full bg-white border border-gray-200 text-gray-900 text-sm rounded-2xl focus:ring-green-500 focus:border-green-500 block p-3.5 pl-11 shadow-sm" />
+                                            <MdEmail className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 h-5 w-5" />
+                                            <input required value={email} onChange={(e) => setEmail(e.target.value)} type="email" placeholder="Gmail address" className="w-full bg-white border border-gray-200 text-gray-900 text-sm rounded-2xl focus:ring-green-500 focus:border-green-500 block p-3.5 pl-11 shadow-sm font-semibold" />
                                         </div>
-                                    </motion.div>
+                                        <div className="relative">
+                                            <MdLock className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 h-5 w-5" />
+                                            <input required value={password} onChange={(e) => setPassword(e.target.value)} type={showPass ? "text" : "password"} placeholder="Password" className="w-full bg-white border border-gray-200 text-gray-900 text-sm rounded-2xl focus:ring-green-500 focus:border-green-500 block p-3.5 pl-11 pr-11 shadow-sm" />
+                                            <button type="button" onClick={() => setShowPass(!showPass)} className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
+                                                {showPass ? <MdVisibilityOff className="h-5 w-5" /> : <MdVisibility className="h-5 w-5" />}
+                                            </button>
+                                        </div>
+                                        <button type="submit" disabled={loading} className="w-full py-4 rounded-2xl bg-gray-900 text-white font-bold text-base hover:bg-black transition-all shadow-lg flex items-center justify-center gap-2">
+                                            {loading ? "Establishing connection..." : (mode === "login" ? "Verify Gmail & Sign In →" : "Verify Gmail & Create Account")}
+                                        </button>
+                                    </>
+                                ) : (
+                                    <div className="space-y-4 animate-in slide-in-from-bottom-2">
+                                        <div className="text-center px-2">
+                                            <p className="text-sm text-gray-400 font-medium">Verification code sent to <br/><span className="text-gray-900 font-bold">{email}</span></p>
+                                        </div>
+                                        <div className="relative">
+                                            <input required value={emailOtp} onChange={(e) => setEmailOtp(e.target.value)} type="number" placeholder="Enter 6-digit OTP" className="w-full bg-white border border-gray-200 text-gray-900 text-xl font-bold tracking-[0.5em] text-center rounded-2xl focus:ring-green-500 focus:border-green-500 block py-4 shadow-sm" />
+                                        </div>
+                                        <button type="button" onClick={() => { setEmailOtpStep(1); setIsEmailVerified(false); }} className="text-sm text-gray-500 font-bold hover:text-gray-900 flex items-center gap-1 mx-auto">
+                                            <MdArrowBack /> Change Email or Password
+                                        </button>
+                                        <button type="submit" disabled={loading} className="w-full py-4 rounded-2xl bg-green-600 text-white font-bold text-base hover:bg-green-700 transition-all shadow-lg shadow-green-100">
+                                            {loading ? "Verifying..." : (isEmailVerified ? "Success! Finalizing Login..." : "Confirm & Finalize Login")}
+                                        </button>
+                                    </div>
                                 )}
-                                <div className="relative">
-                                    <MdEmail className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 h-5 w-5" />
-                                    <input required value={email} onChange={(e) => setEmail(e.target.value)} type="email" placeholder="Email address" className="w-full bg-white border border-gray-200 text-gray-900 text-sm rounded-2xl focus:ring-green-500 focus:border-green-500 block p-3.5 pl-11 shadow-sm" />
-                                </div>
-                                <div className="relative">
-                                    <MdLock className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 h-5 w-5" />
-                                    <input required value={password} onChange={(e) => setPassword(e.target.value)} type={showPass ? "text" : "password"} placeholder="Password" className="w-full bg-white border border-gray-200 text-gray-900 text-sm rounded-2xl focus:ring-green-500 focus:border-green-500 block p-3.5 pl-11 pr-11 shadow-sm" />
-                                    <button type="button" onClick={() => setShowPass(!showPass)} className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
-                                        {showPass ? <MdVisibilityOff className="h-5 w-5" /> : <MdVisibility className="h-5 w-5" />}
-                                    </button>
-                                </div>
-                                <button type="submit" disabled={loading} className="w-full py-4 rounded-2xl bg-gray-900 text-white font-bold text-base hover:bg-black transition-all shadow-lg">
-                                    {loading ? "Authenticating..." : (mode === "login" ? "Sign In Securely →" : "Create Account + Login")}
-                                </button>
                             </form>
                         </motion.div>
                     )}

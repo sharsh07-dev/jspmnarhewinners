@@ -3,7 +3,17 @@
  * Connects the React frontend to the Satellite Analysis Engine (FastAPI).
  */
 
-const BASE_URL = 'http://127.0.0.1:8000';
+const getBaseUrl = () => {
+    // If we're on localhost, use the standard 127.0.0.1
+    // If we're on mobile (accessing via IP), use that same IP for the backend
+    const hostname = window.location.hostname;
+    if (hostname === 'localhost' || hostname === '127.0.0.1') {
+        return 'http://127.0.0.1:8000';
+    }
+    return `http://${hostname}:8000`;
+};
+
+const BASE_URL = getBaseUrl();
 const API_PREFIX = '/api/v1';
 
 async function apiFetch(path, options = {}) {
