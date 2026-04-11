@@ -1,15 +1,20 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useMemo } from "react";
 import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { db } from "../firebase";
 import { ref, get, onValue, push, set } from "firebase/database";
 import { motion, AnimatePresence } from "framer-motion";
 import useAuthStore from "../store/useAuthStore";
-import { format, addHours } from "date-fns";
+import { 
+    format, addHours, startOfMonth, endOfMonth, startOfWeek, 
+    endOfWeek, eachDayOfInterval, isSameMonth, isToday, isSameDay, 
+    addMonths, subMonths, parseISO, isBefore, startOfToday
+} from "date-fns";
 import toast from "react-hot-toast";
 import { generateGSTInvoice } from "../utils/invoiceGenerator";
 import {
     MdLocationOn, MdStar, MdAccessTime, MdCalendarToday,
-    MdVerified, MdShare, MdFavorite, MdHourglassEmpty, MdPrint, MdClose
+    MdVerified, MdShare, MdFavorite, MdHourglassEmpty, MdPrint, MdClose,
+    MdChevronLeft, MdChevronRight
 } from "react-icons/md";
 
 const EquipmentDetail = () => {
@@ -31,6 +36,8 @@ const EquipmentDetail = () => {
     const [bookLoading, setBookLoading] = useState(false);
     const [bookingId, setBookingId] = useState(null);
     const [step, setStep] = useState(0); // 0: Form, 2: Success Receipt
+    const [currentMonth, setCurrentMonth] = useState(new Date());
+    const [allEquipmentBookings, setAllEquipmentBookings] = useState([]);
 
     // Review form
     const [rating, setRating] = useState(5);
@@ -39,20 +46,58 @@ const EquipmentDetail = () => {
     useEffect(() => {
         const eqRef = ref(db, `equipment/${id}`);
         get(eqRef).then((snap) => {
-            if (!snap.exists()) { toast.error("Equipment not found"); navigate("/equipment"); return; }
+            if (!snap.exists()) { 
+                toast.error("Equipment not found"); 
+                navigate("/equipment"); 
+                return; 
+            }
             const eq = snap.val();
             setEquipment(eq);
             get(ref(db, `users/${eq.ownerId}`)).then((s) => s.exists() && setOwner(s.val()));
         });
+
+        // Reviews Listener
         const revRef = ref(db, `reviews/${id}`);
-        const unsub = onValue(revRef, (snap) => {
+        const unsubReviews = onValue(revRef, (snap) => {
             if (snap.exists()) {
                 setReviews(Object.values(snap.val()));
             }
         });
+        
+        // Bookings Listener (for calendar)
+        const bookingsRef = ref(db, "bookings");
+        const unsubBookings = onValue(bookingsRef, (snap) => {
+            if (snap.exists()) {
+                const data = snap.val();
+                const list = Object.keys(data)
+                    .map(k => ({ id: k, ...data[k] }))
+                    .filter(b => b.equipmentId === id && b.status !== "cancelled");
+                setAllEquipmentBookings(list);
+            }
+        });
+
         setLoading(false);
-        return () => unsub();
+        return () => { 
+            unsubReviews(); 
+            unsubBookings(); 
+        };
     }, [id, navigate]);
+
+    const busyDatesMap = useMemo(() => {
+        const map = {};
+        allEquipmentBookings.forEach(b => {
+            const dateStr = format(new Date(b.startTime), "yyyy-MM-dd");
+            if (!map[dateStr]) map[dateStr] = [];
+            map[dateStr].push(b);
+        });
+        return map;
+    }, [allEquipmentBookings]);
+
+    const daysInMonth = useMemo(() => {
+        const start = startOfWeek(startOfMonth(currentMonth), { weekStartsOn: 1 });
+        const end = endOfWeek(endOfMonth(currentMonth), { weekStartsOn: 1 });
+        return eachDayOfInterval({ start, end });
+    }, [currentMonth]);
 
     useEffect(() => {
         if (wizardData) {
@@ -375,10 +420,66 @@ const EquipmentDetail = () => {
                                 <form onSubmit={handleBooking} className="space-y-4">
                                     {equipment.listingType !== "sell" && (
                                         <>
+                                            <div className="mb-6">
+                                                <label className="label flex items-center gap-1.5 mb-3">
+                                                    <MdCalendarToday className="text-green-600" /> Availability Calendar
+                                                </label>
+                                                
+                                                <div className="bg-gray-50 rounded-2xl p-4 border border-gray-100">
+                                                    <div className="flex justify-between items-center mb-4 text-xs font-bold px-1">
+                                                        <button type="button" onClick={() => setCurrentMonth(subMonths(currentMonth, 1))} className="p-1.5 hover:bg-gray-200 rounded-lg transition"><MdChevronLeft /></button>
+                                                        <span className="uppercase tracking-widest">{format(currentMonth, "MMMM yyyy")}</span>
+                                                        <button type="button" onClick={() => setCurrentMonth(addMonths(currentMonth, 1))} className="p-1.5 hover:bg-gray-200 rounded-lg transition"><MdChevronRight /></button>
+                                                    </div>
+
+                                                    <div className="grid grid-cols-7 gap-1.5 mb-2 text-center text-[8px] uppercase font-black text-gray-400 tracking-tighter">
+                                                        {['Mo','Tu','We','Th','Fr','Sa','Su'].map(d => <div key={d}>{d}</div>)}
+                                                    </div>
+
+                                                    <div className="grid grid-cols-7 gap-1.5">
+                                                        {daysInMonth.map((day, idx) => {
+                                                            const dateStr = format(day, "yyyy-MM-dd");
+                                                            const isBusy = !!busyDatesMap[dateStr];
+                                                            const isSelected = bookDate === dateStr;
+                                                            const isCurrMonth = isSameMonth(day, currentMonth);
+                                                            const isPast = isBefore(day, startOfToday());
+                                                            
+                                                            return (
+                                                                <button
+                                                                    key={idx}
+                                                                    type="button"
+                                                                    disabled={isPast}
+                                                                    onClick={() => setBookDate(dateStr)}
+                                                                    className={`aspect-square flex flex-col items-center justify-center rounded-lg text-[11px] font-bold transition-all relative
+                                                                        ${!isCurrMonth ? 'text-gray-300 opacity-20' : 
+                                                                          isSelected ? 'bg-green-600 text-white shadow-lg shadow-green-100 scale-110' :
+                                                                          isBusy ? 'bg-red-50 text-red-600 border border-red-200' : 'bg-white text-gray-700 hover:bg-green-50 border border-gray-100'}
+                                                                        ${isToday(day) && !isSelected ? 'ring-1 ring-green-400' : ''}
+                                                                        ${isPast ? 'cursor-not-allowed grayscale' : ''}
+                                                                    `}
+                                                                >
+                                                                    {format(day, "d")}
+                                                                    {isBusy && !isSelected && <div className="absolute bottom-1 w-1 h-1 bg-red-400 rounded-full" />}
+                                                                </button>
+                                                            )
+                                                        })}
+                                                    </div>
+                                                </div>
+                                                
+                                                <div className="flex items-center gap-4 mt-3 px-1">
+                                                    <div className="flex items-center gap-1.5 text-[9px] font-bold text-gray-400 uppercase">
+                                                        <div className="w-2.5 h-2.5 bg-red-100 border border-red-200 rounded-sm" /> Busy
+                                                    </div>
+                                                    <div className="flex items-center gap-1.5 text-[9px] font-bold text-gray-400 uppercase">
+                                                        <div className="w-2.5 h-2.5 bg-white border border-gray-100 rounded-sm" /> Free
+                                                    </div>
+                                                </div>
+                                            </div>
+
                                             <div>
-                                                <label className="label flex items-center gap-1.5"><MdCalendarToday className="text-green-600" />Date</label>
+                                                <label className="label flex items-center gap-1.5"><MdCalendarToday className="text-green-600" />Selected Date</label>
                                                 <input type="date" required min={format(new Date(), "yyyy-MM-dd")} value={bookDate} onChange={(e) => setBookDate(e.target.value)}
-                                                    className="input-field font-bold" />
+                                                    className="input-field font-bold bg-green-50/50 border-green-100" />
                                             </div>
                                             <div>
                                                 <label className="label flex items-center gap-1.5"><MdAccessTime className="text-green-600" />Start Time</label>
