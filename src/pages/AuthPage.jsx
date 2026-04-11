@@ -224,24 +224,54 @@ const AuthPage = () => {
 
     return (
         <div className="min-h-screen flex pt-16">
-            <div className="hidden lg:flex flex-col justify-between w-1/2 bg-gradient-to-br from-green-900 via-green-800 to-emerald-700 p-12 relative overflow-hidden">
-                <div className="absolute inset-0 bg-hero-pattern opacity-20" />
-                <div className="absolute -bottom-20 -left-20 w-96 h-96 bg-green-500/20 rounded-full blur-3xl" />
-                <div className="relative flex items-center gap-3">
-                    <div className="w-11 h-11 bg-white/20 backdrop-blur rounded-xl flex items-center justify-center border border-white/30">
-                        <FaTractor className="text-white h-6 w-6" />
+            <div className="hidden lg:flex flex-col justify-between w-1/2 relative overflow-hidden group">
+                {/* Hero Background Image */}
+                <div 
+                    className="absolute inset-0 bg-cover bg-center transition-transform duration-[10000ms] group-hover:scale-110"
+                    style={{ backgroundImage: "url('/auth_hero.png')" }}
+                />
+                
+                {/* Advanced Gradient Overlay */}
+                <div className="absolute inset-0 bg-gradient-to-tr from-green-950/90 via-green-900/60 to-black/20" />
+                <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-green-950/80" />
+
+                {/* Glassmorphic Brand Hub */}
+                <div className="relative z-10 p-12">
+                     <div className="inline-flex items-center gap-3 px-4 py-2 bg-white/10 backdrop-blur-md rounded-2xl border border-white/20 shadow-xl">
+                        <div className="w-9 h-9 bg-green-500 text-white rounded-xl flex items-center justify-center shadow-lg">
+                            <FaTractor className="h-5 w-5" />
+                        </div>
+                        <span className="text-xl font-black text-white font-display tracking-tight">Agro<span className="text-green-400">Share</span></span>
                     </div>
-                    <span className="text-2xl font-black text-white font-display">Agro<span className="text-green-300">Share</span></span>
                 </div>
-                <div className="relative space-y-6">
-                    <h2 className="text-4xl font-black text-white font-display leading-tight">
-                        Empowering Indian Farmers with <span className="text-green-300">Smart Sharing</span>
-                    </h2>
-                    <p className="text-green-200 text-lg leading-relaxed">
-                        Rent tractors, harvesters, and tools from nearby farmers.
-                    </p>
+
+                {/* Hero Text Content */}
+                <div className="relative z-10 px-12 pb-24 max-w-xl">
+                    <motion.div
+                        initial={{ opacity: 0, x: -30 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ duration: 0.8 }}
+                    >
+                        <h2 className="text-5xl font-black text-white font-display leading-[1.1] mb-6 drop-shadow-2xl">
+                            Empowering <span className="text-green-400">Indian Farmers</span> with Smart Sharing
+                        </h2>
+                        <div className="flex items-center gap-4">
+                            <div className="w-1 h-12 bg-green-500 rounded-full" />
+                            <p className="text-green-100 text-xl font-medium leading-relaxed drop-shadow-md">
+                                Rent tractors, harvesters, and tools from nearby farmers with a single tap.
+                            </p>
+                        </div>
+                    </motion.div>
                 </div>
-                <p className="relative text-green-400 text-sm">© 2024 AgroShare India</p>
+
+                {/* Footer Attribution */}
+                <div className="relative z-10 px-12 pb-12 flex justify-between items-center text-green-300/60 text-xs font-bold uppercase tracking-widest">
+                    <span>© 2024 AgroShare India</span>
+                    <span className="flex items-center gap-2">
+                        <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
+                        Trusted by 18,000+ Farmers
+                    </span>
+                </div>
             </div>
 
             <div className="flex-1 flex items-center justify-center p-6 sm:p-10 bg-gray-50">
