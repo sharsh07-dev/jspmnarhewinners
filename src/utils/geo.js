@@ -11,17 +11,26 @@ export const getDistanceKm = (lat1, lng1, lat2, lng2) => {
     return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 };
 
-// ── Get user's GPS coordinates ───────────────────────────────────────
 export const getUserLocation = () =>
-    new Promise((resolve, reject) =>
-        navigator.geolocation
-            ? navigator.geolocation.getCurrentPosition(
-                (p) => resolve({ lat: p.coords.latitude, lng: p.coords.longitude }),
-                reject,
-                { timeout: 8000 }
-            )
-            : reject(new Error("Geolocation not supported"))
-    );
+    new Promise((resolve, reject) => {
+        if (!navigator.geolocation) {
+            reject(new Error("Geolocation not supported"));
+            return;
+        }
+
+        navigator.geolocation.getCurrentPosition(
+            (p) => resolve({ lat: p.coords.latitude, lng: p.coords.longitude }),
+            (err) => {
+                console.error("Geolocation Error:", err);
+                reject(err);
+            },
+            { 
+                enableHighAccuracy: true, 
+                timeout: 15000, // 15 seconds for mobile GPS
+                maximumAge: 1000 * 60 * 5 // Accept cached location up to 5 minutes old
+            }
+        );
+    });
 
 // ── Reverse geocode coordinates → human-readable address ─────────────
 // Uses OpenStreetMap Nominatim (free, no API key required)

@@ -94,7 +94,7 @@ const LabourDiscovery = () => {
             setLocation({ ...loc, address });
             setStep(2);
         } catch (err) {
-            toast.error("GPS failed. Search manually.");
+            toast.error("GPS failed. Please search manually.");
         } finally {
             setLocLoading(false);
         }

@@ -4,6 +4,8 @@ import { motion, AnimatePresence } from "framer-motion";
 import useAuthStore from "../store/useAuthStore";
 import { db } from "../firebase";
 import { ref, onValue, push, set, remove, get, update } from "firebase/database";
+import { firestore } from "../firebase";
+import { doc, onSnapshot } from "firebase/firestore";
 import { compressAndUpload } from "../services/cloudinary";
 import { suggestPrice } from "../utils/priceSuggestion";
 import { getUserLocation, reverseGeocode } from "../utils/geo";
@@ -71,6 +73,7 @@ const Dashboard = () => {
     const [bookingStatusTab, setBookingStatusTab] = useState("all");
     const [selectedBookingForDamage, setSelectedBookingForDamage] = useState(null);
     const [activeDamageClaims, setActiveDamageClaims] = useState([]);
+    const [farmData, setFarmData] = useState(null);
 
     // Profile editing
     const [profileForm, setProfileForm] = useState({ name: "", phone: "", village: "", bio: "", photoUrl: "" });
@@ -184,8 +187,15 @@ const Dashboard = () => {
             }
         });
 
-        return () => { ubSub(); eSub(); nSub(); luSub(); lcSub(); };
-    }, [authUser]);
+        // Farm Data listener
+        const devId = user?.deviceId || "esp32_01";
+        const farmRef = doc(firestore, "farm_devices", devId);
+        const unsubFarm = onSnapshot(farmRef, (snap) => {
+            if (snap.exists()) setFarmData(snap.data());
+        });
+
+        return () => { ubSub(); eSub(); nSub(); luSub(); lcSub(); unsubFarm(); };
+    }, [authUser, user]);
 
     useEffect(() => {
         if (tab === "claims") {
@@ -508,21 +518,39 @@ const Dashboard = () => {
 
                                         {/* Quick Access widgets */}
                                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                            {/* Farm Monitoring Quick Access */}
-                                            <div className="bg-gradient-to-br from-blue-900 to-indigo-900 rounded-2xl p-5 border border-indigo-800 shadow-sm relative overflow-hidden group">
+                                            {/* Farm Monitoring Live Widget */}
+                                            <div onClick={() => navigate('/farm-monitoring')} className="bg-gradient-to-br from-blue-900 to-indigo-900 rounded-3xl p-6 border border-indigo-800 shadow-xl relative overflow-hidden group cursor-pointer active:scale-[0.98] transition-all">
                                                 <div className="absolute top-0 right-0 w-32 h-32 blur-[60px] rounded-full bg-blue-500/20 group-hover:bg-blue-400/30 transition-colors" />
                                                 <div className="relative z-10 flex flex-col h-full">
-                                                    <div className="flex justify-between items-start mb-4">
-                                                        <div className="w-10 h-10 bg-white/10 rounded-xl flex items-center justify-center text-blue-300">
-                                                            <MdSmartToy size={20} />
+                                                    <div className="flex justify-between items-start mb-6">
+                                                        <div className="w-12 h-12 bg-white/10 rounded-2xl flex items-center justify-center text-blue-300 shadow-inner">
+                                                            <MdSmartToy size={24} />
                                                         </div>
-                                                        <span className="text-[10px] font-black text-blue-300 uppercase tracking-widest px-2 py-0.5 bg-white/5 rounded-full border border-white/10">Active</span>
+                                                        <div className="flex flex-col items-end gap-1">
+                                                            <span className="text-[10px] font-black text-blue-300 uppercase tracking-widest px-2 py-0.5 bg-white/5 rounded-full border border-white/10">ESP32 Live</span>
+                                                            {farmData?.motorStatus && (
+                                                                <span className="text-[9px] font-black text-green-400 uppercase animate-pulse">Irrigation Active</span>
+                                                            )}
+                                                        </div>
                                                     </div>
-                                                    <h3 className="font-bold text-white text-lg">Farm Monitoring</h3>
-                                                    <p className="text-blue-200/70 text-xs font-medium mt-1 mb-4">Control irrigation & view soil moisture in real-time from IoT sensors.</p>
-                                                    <a href="/farm-monitoring" className="mt-auto inline-flex items-center gap-2 text-xs font-bold text-white uppercase tracking-widest hover:text-blue-300 transition-colors">
-                                                        Open Dashboard <MdDoubleArrow />
-                                                    </a>
+
+                                                    <div className="grid grid-cols-2 gap-4 mb-6">
+                                                        <div className="bg-white/5 rounded-2xl p-3 border border-white/5">
+                                                            <p className="text-[9px] font-black text-blue-300/50 uppercase tracking-widest mb-1">Soil Moisture</p>
+                                                            <p className="text-xl font-black text-white">{farmData?.moisture || '--'}%</p>
+                                                        </div>
+                                                        <div className="bg-white/5 rounded-2xl p-3 border border-white/5">
+                                                            <p className="text-[9px] font-black text-blue-300/50 uppercase tracking-widest mb-1">Temperature</p>
+                                                            <p className="text-xl font-black text-white">{farmData?.temperature || '--'}°C</p>
+                                                        </div>
+                                                    </div>
+
+                                                    <div className="mt-auto flex items-center justify-between">
+                                                        <span className="text-xs font-bold text-white uppercase tracking-widest group-hover:text-blue-300 transition-colors flex items-center gap-2">
+                                                            Open Farm Portal <MdDoubleArrow />
+                                                        </span>
+                                                        <div className="text-[10px] text-white/40 font-mono">ID: {user?.deviceId || 'esp32_01'}</div>
+                                                    </div>
                                                 </div>
                                             </div>
 

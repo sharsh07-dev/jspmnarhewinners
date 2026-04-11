@@ -38,7 +38,7 @@ const AddEquipmentModal = ({ open, onClose, authUser, user }) => {
             const address = await reverseGeocode(loc.lat, loc.lng);
             setForm(f => ({ ...f, location: address, lat: loc.lat, lng: loc.lng }));
             toast.success(`📍 Location: ${address}`);
-        } catch { toast.error("Could not get GPS location"); }
+        } catch { toast.error("GPS failed. Please enter location manually."); }
     };
 
     const handleSubmit = async (e) => {
