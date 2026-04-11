@@ -16,7 +16,7 @@ import {
     MdNotifications, MdAccessTime, MdShoppingCart,
     MdPhone, MdMessage, MdInbox, MdDone, MdReceipt, MdDownload, MdLightbulb,
     MdReportProblem, MdVideoCall, MdVerifiedUser, MdHistoryEdu, MdPeople, MdChat, MdCheck, MdDoubleArrow, MdSecurity,
-    MdSmartToy, MdAcUnit, MdLocalFlorist, MdStar, MdAttachMoney, MdGavel, MdAnalytics, MdSatellite, MdAccessTime
+    MdSmartToy, MdAcUnit, MdLocalFlorist, MdStar, MdAttachMoney, MdGavel, MdAnalytics, MdSatellite
 } from "react-icons/md";
 import { generateGSTInvoice } from "../utils/invoiceGenerator";
 import DamageReportModal from "../components/DamageReportModal";
