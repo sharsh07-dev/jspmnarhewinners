@@ -3,11 +3,11 @@ import { motion, AnimatePresence } from "framer-motion";
 import useAuthStore from "../store/useAuthStore";
 import { Navigate } from "react-router-dom";
 import { db } from "../firebase";
-import { ref, onValue } from "firebase/database";
+import { ref, onValue, update } from "firebase/database";
 import { 
     MdAdminPanelSettings, MdPeople, MdDashboard, MdSettings, 
     MdAttachMoney, MdReceipt, MdTrendingUp, MdHistory, MdAccountBalanceWallet,
-    MdReportProblem, MdVerified, MdOutlinePayment
+    MdReportProblem, MdVerified, MdOutlinePayment, MdSatellite
 } from "react-icons/md";
 import { format } from "date-fns";
 import toast from "react-hot-toast";
@@ -108,7 +108,7 @@ const AdminDashboard = () => {
             unsubBookings();
             unsubClaims();
             unsubUsers();
-            unsubsSubs();
+            unsubSubs();
         };
     }, [user]);
 

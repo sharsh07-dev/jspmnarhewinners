@@ -1,0 +1,66 @@
+services:
+  api:
+    build:
+      context: ..
+      dockerfile: backend/Dockerfile
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+    env_file:
+      - .env
+    environment:
+      DATABASE_URL: postgresql+asyncpg://crop:crop@postgres:5432/cropshield
+      SYNC_DATABASE_URL: postgresql+psycopg://crop:crop@postgres:5432/cropshield
+      REDIS_URL: redis://redis:6379/0
+      CELERY_BROKER_URL: redis://redis:6379/0
+      CELERY_RESULT_BACKEND: redis://redis:6379/0
+      REPORT_ARTIFACTS_DIR: /app/data/artifacts
+    ports:
+      - "8000:8000"
+    volumes:
+      - ../backend:/app/backend
+      - ../data:/app/data
+    depends_on:
+      - postgres
+      - redis
+
+  worker:
+    build:
+      context: ..
+      dockerfile: backend/Dockerfile
+    command: celery -A app.workers.celery_app.celery_app worker --loglevel=info
+    env_file:
+      - .env
+    environment:
+      DATABASE_URL: postgresql+asyncpg://crop:crop@postgres:5432/cropshield
+      SYNC_DATABASE_URL: postgresql+psycopg://crop:crop@postgres:5432/cropshield
+      REDIS_URL: redis://redis:6379/0
+      CELERY_BROKER_URL: redis://redis:6379/0
+      CELERY_RESULT_BACKEND: redis://redis:6379/0
+      REPORT_ARTIFACTS_DIR: /app/data/artifacts
+    volumes:
+      - ../backend:/app/backend
+      - ../data:/app/data
+    depends_on:
+      - postgres
+      - redis
+
+  postgres:
+    image: postgres:16
+    environment:
+      POSTGRES_DB: cropshield
+      POSTGRES_USER: crop
+      POSTGRES_PASSWORD: crop
+    ports:
+      - "5432:5432"
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+
+volumes:
+  pg_data:
+  redis_data:

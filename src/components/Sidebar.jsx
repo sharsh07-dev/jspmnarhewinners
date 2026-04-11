@@ -6,7 +6,7 @@ import {
     MdDashboard, MdSearch, MdPsychology, MdSwapHorizontalCircle, 
     MdTrendingUp, MdGavel, MdAccountBalance, MdHelpCenter, MdPeople,
     MdChevronRight, MdMenuOpen, MdKeyboardArrowLeft, MdKeyboardArrowRight,
-    MdSmartToy, MdSensors, MdLocalFlorist, MdAcUnit
+    MdSmartToy, MdSensors, MdLocalFlorist, MdAcUnit, MdSatellite
 } from "react-icons/md";
 import useUIStore from "../store/useUIStore";
 
@@ -55,6 +55,7 @@ const Sidebar = () => {
         { to: "/mandi-advisor", icon: <MdSmartToy />, label: "Mandi Bot", badge: "HOT" },
         { to: "/farm-monitoring", icon: <MdSensors />, label: "Farm Monitor" },
         { to: "/cold-chain", icon: <MdAcUnit />, label: "Cold Storage", badge: "SAFE" },
+        { to: "/crop-claims", icon: <MdSatellite />, label: "AI Crop Claims", badge: "SPACE" },
         { to: "/legal-advisor", icon: <MdGavel />, label: "Legal Advisor", badge: "AI" },
         { to: "/pesticide-exchange", icon: <MdSwapHorizontalCircle />, label: "Pesticide Exchange" },
         { to: "/mandi-prices", icon: <MdTrendingUp />, label: "Mandi Prices" },
@@ -63,6 +64,7 @@ const Sidebar = () => {
 
     const adminLinks = [
         { to: "/admin", icon: <MdDashboard />, label: "Admin Console" },
+        { to: "/audit-claims", icon: <MdSatellite />, label: "Audit Board", badge: "AI" },
         { to: "/dashboard", icon: <MdTrendingUp />, label: "Platform Pulse" },
     ];
 

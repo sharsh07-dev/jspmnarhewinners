@@ -34,6 +34,8 @@ import CropDiseaseScanner from "./pages/CropDiseaseScanner";
 import ColdChainLocator from "./pages/ColdChainLocator";
 import LegalAdvisor from "./pages/LegalAdvisor";
 import FarmerChatbot from "./components/FarmerChatbot";
+import CropClaimFiling from "./pages/CropClaimFiling";
+import CropClaimAudit from "./pages/CropClaimAudit";
 
 const AppContent = () => {
     const { setAuthUser, setUser, setLoading, user, isLoading } = useAuthStore();
@@ -96,6 +98,8 @@ const AppContent = () => {
             <Route path="/crop-disease" element={user?.role?.toLowerCase() === "farmer" ? <CropDiseaseScanner /> : <Navigate to="/" replace />} />
             <Route path="/legal-advisor" element={user?.role?.toLowerCase() === "farmer" ? <LegalAdvisor /> : <Navigate to="/" replace />} />
             <Route path="/find-labour" element={user?.role?.toLowerCase() === "farmer" ? <LabourDiscovery /> : <Navigate to="/" replace />} />
+            <Route path="/crop-claims" element={user?.role?.toLowerCase() === "farmer" ? <CropClaimFiling /> : <Navigate to="/" replace />} />
+            <Route path="/audit-claims" element={(user?.role?.toLowerCase() === "admin" || user?.role?.toLowerCase() === "audit") ? <CropClaimAudit /> : <Navigate to="/" replace />} />
             <Route path="/admin" element={user?.role?.toLowerCase() === "admin" ? <AdminDashboard /> : <Navigate to="/" replace />} />
             <Route path="/labour" element={user?.role?.toLowerCase() === "labour" ? <LabourDashboard /> : <Navigate to="/" replace />} />
             <Route path="/labour/work" element={user?.role?.toLowerCase() === "labour" ? <LabourMyWork /> : <Navigate to="/" replace />} />

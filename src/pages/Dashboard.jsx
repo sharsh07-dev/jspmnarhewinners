@@ -16,7 +16,7 @@ import {
     MdNotifications, MdAccessTime, MdShoppingCart,
     MdPhone, MdMessage, MdInbox, MdDone, MdReceipt, MdDownload, MdLightbulb,
     MdReportProblem, MdVideoCall, MdVerifiedUser, MdHistoryEdu, MdPeople, MdChat, MdCheck, MdDoubleArrow,
-    MdSmartToy, MdAcUnit, MdLocalFlorist, MdStar, MdAttachMoney, MdGavel, MdAnalytics
+    MdSmartToy, MdAcUnit, MdLocalFlorist, MdStar, MdAttachMoney, MdGavel, MdAnalytics, MdSatellite
 } from "react-icons/md";
 import { generateGSTInvoice } from "../utils/invoiceGenerator";
 import DamageReportModal from "../components/DamageReportModal";
@@ -33,6 +33,7 @@ const TABS = [
     { id: "hiring", label: "Labour Hiring", icon: <MdPeople /> },
     { id: "add", label: "Add Equipment", icon: <MdAddCircle /> },
     { id: "notifs", label: "Notifications", icon: <MdNotifications /> },
+    { id: "claims", label: "AI Crop Claims", icon: <MdSatellite /> },
 ];
 
 const EQUIPMENT_TYPES = ["Tractor", "Harvester", "Sprayer", "Rotavator", "Plough", "Tools"];
@@ -132,6 +133,13 @@ const Dashboard = () => {
 
         return () => { ubSub(); eSub(); nSub(); luSub(); lcSub(); };
     }, [authUser]);
+
+    useEffect(() => {
+        if (tab === "claims") {
+            navigate("/crop-claims");
+            setTab("overview"); // Reset so it doesn't get stuck if they press back
+        }
+    }, [tab, navigate]);
 
     const handleTypeChange = (type) => {
         setForm(f => ({ ...f, type }));
@@ -327,6 +335,19 @@ const Dashboard = () => {
                                                 </button>
                                                 
                                                 <button 
+                                                    onClick={() => navigate('/crop-claims')}
+                                                    className="bg-white p-6 rounded-[32px] border border-gray-100 shadow-sm hover:shadow-md transition-all text-left flex items-center gap-5 group"
+                                                >
+                                                    <div className="w-14 h-14 bg-emerald-50 text-emerald-600 rounded-2xl flex items-center justify-center text-3xl transition-transform group-hover:scale-110">
+                                                        <MdSatellite />
+                                                    </div>
+                                                    <div>
+                                                        <h4 className="font-black text-gray-900 leading-tight">AI Crop Claims</h4>
+                                                        <p className="text-xs text-gray-400 font-medium mt-1">Satellite-powered claims. Rapid audit via multidate spectral analysis.</p>
+                                                    </div>
+                                                </button>
+                                                
+                                                <button 
                                                     onClick={() => navigate('/crop-disease')}
                                                     className="bg-white p-6 rounded-[32px] border border-gray-100 shadow-sm hover:shadow-md transition-all text-left flex items-center gap-5 group"
                                                 >
@@ -430,6 +451,24 @@ const Dashboard = () => {
                                                     <p className="text-emerald-200/70 text-xs font-medium mt-1 mb-4">Get smart crop price predictions and market analysis directly.</p>
                                                     <a href="/mandi-advisor" className="mt-auto inline-flex items-center gap-2 text-xs font-bold text-white uppercase tracking-widest hover:text-emerald-300 transition-colors">
                                                         Chat Now <MdDoubleArrow />
+                                                    </a>
+                                                </div>
+                                            </div>
+
+                                            {/* Crop Claims Quick Access */}
+                                            <div className="bg-gradient-to-br from-emerald-900 to-teal-900 rounded-2xl p-5 border border-teal-800 shadow-sm relative overflow-hidden group">
+                                                <div className="absolute top-0 right-0 w-32 h-32 blur-[60px] rounded-full bg-emerald-500/20 group-hover:bg-emerald-400/30 transition-colors" />
+                                                <div className="relative z-10 flex flex-col h-full">
+                                                    <div className="flex justify-between items-start mb-4">
+                                                        <div className="w-10 h-10 bg-white/10 rounded-xl flex items-center justify-center text-emerald-300">
+                                                            <MdSatellite size={20} />
+                                                        </div>
+                                                        <span className="text-[10px] font-black text-emerald-300 uppercase tracking-widest px-2 py-0.5 bg-white/5 rounded-full border border-white/10">Space-Grade Audit</span>
+                                                    </div>
+                                                    <h3 className="font-bold text-white text-lg">Forensic Claim Portal</h3>
+                                                    <p className="text-emerald-200/70 text-xs font-medium mt-1 mb-4">File satellite-verified insurance claims for crop damage instantly.</p>
+                                                    <a href="/crop-claims" className="mt-auto inline-flex items-center gap-2 text-xs font-bold text-white uppercase tracking-widest hover:text-emerald-300 transition-colors">
+                                                        File Claim Now <MdDoubleArrow />
                                                     </a>
                                                 </div>
                                             </div>

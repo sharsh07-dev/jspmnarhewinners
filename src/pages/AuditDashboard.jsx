@@ -2,10 +2,12 @@ import React from "react";
 import { motion } from "framer-motion";
 import useAuthStore from "../store/useAuthStore";
 import { Navigate } from "react-router-dom";
-import { MdAccountBalance, MdAnalytics, MdDescription } from "react-icons/md";
+import { MdAccountBalance, MdAnalytics, MdDescription, MdSatellite } from "react-icons/md";
+import { useNavigate } from "react-router-dom";
 
 const AuditDashboard = () => {
     const { user } = useAuthStore();
+    const navigate = useNavigate();
 
     if (user?.role !== "audit") return <Navigate to="/" replace />;
 
@@ -29,6 +31,25 @@ const AuditDashboard = () => {
                 </motion.div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <div className="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm flex flex-col gap-4 border-b-4 border-b-indigo-600">
+                        <div className="w-12 h-12 bg-indigo-50 text-indigo-600 rounded-2xl flex items-center justify-center">
+                            <MdSatellite className="h-6 w-6" />
+                        </div>
+                        <div>
+                            <h3 className="text-lg font-bold">Satellite Claim Audit</h3>
+                            <p className="text-sm text-gray-500 mt-1">Review forensic indices (NDVI/NDWI) and authorize crop insurance payouts.</p>
+                            <button className="w-full mt-4 py-3 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 rounded-xl font-bold text-sm transition text-left px-4 flex items-center gap-3">
+                                <MdReceipt /> Tax Audit Logs
+                            </button>
+                        </div>
+                        <button 
+                            onClick={() => navigate('/audit-claims')}
+                            className="mt-auto bg-indigo-600 text-white py-3 rounded-xl font-black text-xs uppercase tracking-widest hover:bg-indigo-700 transition shadow-lg shadow-indigo-100"
+                        >
+                            Start Investigation
+                        </button>
+                    </div>
+
                     <div className="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm flex flex-col gap-4">
                         <div className="w-12 h-12 bg-indigo-100 text-indigo-600 rounded-2xl flex items-center justify-center">
                             <MdAnalytics className="h-6 w-6" />
