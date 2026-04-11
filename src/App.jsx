@@ -10,6 +10,7 @@ import useAuthStore from "./store/useAuthStore";
 
 import Navbar from "./components/Navbar";
 import Sidebar from "./components/Sidebar";
+import MobileNav from "./components/MobileNav";
 import useUIStore from "./store/useUIStore";
 import Footer from "./components/Footer";
 
@@ -37,6 +38,7 @@ import FarmerChatbot from "./components/FarmerChatbot";
 import CropClaimFiling from "./pages/CropClaimFiling";
 import CropClaimAudit from "./pages/CropClaimAudit";
 import EquipmentDamageAudit from "./pages/EquipmentDamageAudit";
+import MobileHome from "./pages/MobileHome";
 
 const AppContent = () => {
     const { setAuthUser, setUser, setLoading, user, isLoading } = useAuthStore();
@@ -77,14 +79,21 @@ const AppContent = () => {
     );
   }
 
+  const isFarmer = user?.role?.toLowerCase() === "farmer";
+
   return (
     <div className="flex flex-col min-h-screen font-display">
-        <Navbar />
+        {/* Hide desktop Navbar on mobile when farmer is logged in — MobileNav takes over */}
+        <div className={isFarmer ? "hidden md:block" : ""}>
+            <Navbar />
+        </div>
         <Sidebar />
-        {(!user || user?.role?.toLowerCase() === "farmer") && <FarmerChatbot />}
-        <main className={`flex-grow transition-all duration-300 w-full overflow-x-hidden ${user ? (isSidebarCollapsed ? "md:pl-16" : "md:pl-56") + " pb-24 md:pb-0" : ""} ${(!user && isHome) ? "" : "pt-[68px]"}`}>
+        {(!user || isFarmer) && <FarmerChatbot />}
+        <MobileNav />
+        <main className={`flex-grow transition-all duration-300 w-full overflow-x-hidden ${user ? (isSidebarCollapsed ? "md:pl-16" : "md:pl-56") + " pb-24 md:pb-0" : ""} ${(!user && isHome) ? "" : isFarmer ? "md:pt-[68px]" : "pt-[68px]"}`}>
           <Routes>
-            <Route path="/" element={!user ? <HomePage /> : (user.role?.toLowerCase() === 'farmer' ? <Navigate to="/equipment" replace /> : <Navigate to={`/${user.role?.toLowerCase()}`} replace />)} />
+            <Route path="/" element={!user ? <HomePage /> : (user.role?.toLowerCase() === 'farmer' ? <Navigate to="/mobile" replace /> : <Navigate to={`/${user.role?.toLowerCase()}`} replace />)} />
+            <Route path="/mobile" element={isFarmer ? <MobileHome /> : <Navigate to="/" replace />} />
             <Route path="/equipment" element={(!user || user?.role?.toLowerCase() === "farmer") ? <DiscoveryWizard /> : <Navigate to="/" replace />} />
             <Route path="/equipment/:id" element={(!user || user?.role?.toLowerCase() === "farmer") ? <EquipmentDetail /> : <Navigate to="/" replace />} />
             <Route path="/auth" element={!user ? <AuthPage /> : <Navigate to={user.role?.toLowerCase() === 'farmer' ? '/equipment' : `/${user.role?.toLowerCase() === 'admin' ? 'admin' : user.role?.toLowerCase()}`} replace />} />
