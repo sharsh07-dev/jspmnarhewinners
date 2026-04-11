@@ -69,6 +69,7 @@ const Dashboard = () => {
     const [tempRating, setTempRating] = useState(5);
     const [bookingStatusTab, setBookingStatusTab] = useState("all");
     const [selectedBookingForDamage, setSelectedBookingForDamage] = useState(null);
+    const [activeDamageClaims, setActiveDamageClaims] = useState([]);
 
     // Add Equipment form
     const [form, setForm] = useState({
@@ -101,6 +102,15 @@ const Dashboard = () => {
                     .map(k => ({ id: k, ...snap.val()[k] }))
                     .filter(r => r.farmerId === authUser.uid);
                 setLabourRequests(list.sort((a,b) => new Date(b.createdAt) - new Date(a.createdAt)));
+            }
+        });
+
+        const claimsRef = ref(db, "damage_claims");
+        const unsubClaims = onValue(claimsRef, (snap) => {
+            if (snap.exists()) {
+                const list = Object.keys(snap.val()).map(k => ({ id: k, ...snap.val()[k] }));
+                const myClaims = list.filter(c => c.ownerId === authUser.uid || c.renterId === authUser.uid);
+                setActiveDamageClaims(myClaims);
             }
         });
 
@@ -496,9 +506,16 @@ const Dashboard = () => {
                                                     </div>
                                                     <h3 className="font-bold text-white text-lg">Damage Protection Fund</h3>
                                                     <p className="text-rose-200/70 text-xs font-medium mt-1 mb-4">Platform-backed coverage for all rental sessions. Claims are verified live via xAI.</p>
-                                                    <button onClick={() => setTab("bookings")} className="mt-auto inline-flex items-center gap-2 text-xs font-bold text-white uppercase tracking-widest hover:text-rose-300 transition-colors">
-                                                        View Active Claims <MdDoubleArrow />
-                                                    </button>
+                                                    <div className="mt-auto flex items-center justify-between">
+                                                        <button onClick={() => setTab("bookings")} className="inline-flex items-center gap-2 text-xs font-bold text-white uppercase tracking-widest hover:text-rose-300 transition-colors">
+                                                            View Active Claims <MdDoubleArrow />
+                                                        </button>
+                                                        {activeDamageClaims.length > 0 && (
+                                                            <span className="px-2 py-0.5 bg-rose-500 text-white text-[9px] font-black rounded-md animate-pulse">
+                                                                {activeDamageClaims.length} ACTIVE CASES
+                                                            </span>
+                                                        )}
+                                                    </div>
                                                 </div>
                                             </div>
                                         </div>
@@ -631,6 +648,34 @@ const Dashboard = () => {
                                                                     <button className="flex-[2] py-3 text-xs font-black uppercase tracking-widest bg-gray-900 text-white rounded-xl shadow-lg active:scale-95 transition-all">
                                                                         View Details
                                                                     </button>
+                                                                </div>
+                                                            )}
+                                                            {b.status === "completed" && (
+                                                                <div className="flex flex-col gap-2">
+                                                                    {b.damageReported ? (
+                                                                        <button 
+                                                                            onClick={() => {
+                                                                                const claim = activeDamageClaims.find(c => c.bookingId === b.id);
+                                                                                if (claim) setSelectedBookingForDamage(b);
+                                                                                else toast.info("Claim is being initialized...");
+                                                                            }}
+                                                                            className="w-full py-3 text-xs font-black uppercase tracking-widest bg-amber-500 text-white rounded-xl shadow-lg flex items-center justify-center gap-2"
+                                                                        >
+                                                                            <MdSecurity /> Track Active Case 🛡️
+                                                                        </button>
+                                                                    ) : (
+                                                                        <div className="flex gap-2">
+                                                                            <button 
+                                                                                onClick={() => setSelectedBookingForDamage(b)}
+                                                                                className="flex-1 py-3 text-xs font-black uppercase tracking-widest text-amber-600 border-2 border-amber-50 rounded-xl hover:bg-amber-50 transition-all flex items-center justify-center gap-2"
+                                                                            >
+                                                                                <MdReportProblem /> Report Issue
+                                                                            </button>
+                                                                            <button className="flex-1 py-3 text-xs font-black uppercase tracking-widest bg-gray-900 text-white rounded-xl shadow-lg transition-all">
+                                                                                Book Again
+                                                                            </button>
+                                                                        </div>
+                                                                    )}
                                                                 </div>
                                                             )}
                                                         </div>
@@ -1336,6 +1381,12 @@ const Dashboard = () => {
                     </main>
                 </div>
             </div>
+            {selectedBookingForDamage && (
+                <DamageReportModal 
+                    booking={selectedBookingForDamage} 
+                    onClose={() => setSelectedBookingForDamage(null)} 
+                />
+            )}
         </div>
     );
 };
